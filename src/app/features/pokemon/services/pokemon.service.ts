@@ -35,8 +35,8 @@ export class PokemonService {
 
   getPokemonPage(page: number) {
     const url = `${POKEMON_API_HOST}/pokemon`;
-    return this.httpClient.get<Pokemon>(url, {
-      params: new HttpParams().set('limit', '1').set('offset', '1'),
+    return this.httpClient.get<Pokemon[]>(url, {
+      params: new HttpParams().set('limit', page).set('offset', page),
       context: new HttpContext().set(CACHING_ENABLED, true),
     });
   }
