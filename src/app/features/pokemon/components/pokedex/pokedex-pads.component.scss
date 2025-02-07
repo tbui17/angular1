@@ -11,18 +11,20 @@ $pokedex-text-dark: #032d28;
 
 :host {
   .pokedex__joystick-container {
-    position: absolute;
-    left: 0;
-    z-index: 1;
     width: 100px;
     height: 100px;
-    margin-top: -130px;
-    margin-left: 300px;
     content: ' ';
-    background: $pokedex-dark-gray;
-    border: var(--spacing-xs) solid $pokedex-black;
+    background: $pokedex-light-gray;
+    border: var(--spacing-xs) solid $pokedex-dark-gray;
     border-top-right-radius: 50px;
     border-bottom-right-radius: 50px;
+
+    position: absolute;
+    margin-top: -130px;
+    margin-left: 300px;
+    z-index: 1;
+
+    left: 0;
     transition: left 1s ease;
 
     @include mq.for-phone-only {
