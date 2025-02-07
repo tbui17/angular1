@@ -1,10 +1,9 @@
 import { PokemonService } from '~features/pokemon/services/pokemon.service';
 import { ChangeDetectionStrategy, Component, CUSTOM_ELEMENTS_SCHEMA, inject } from '@angular/core';
 import { PokemonCardComponent } from '../pokemon/components/pokemon-card/pokemon-card.component';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { AlertService } from '../../core/services/alert.service';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
-import { BehaviorSubject, catchError, switchMap } from 'rxjs';
+import { BehaviorSubject, catchError, combineLatestWith, map, startWith, switchMap } from 'rxjs';
 import { AsyncPipe } from '@angular/common';
 
 @Component({
@@ -21,23 +20,37 @@ export class BulkComponent {
   private readonly allPokemon$;
 
   readonly pageNumber = new FormControl(1, { nonNullable: true });
-  readonly pageNumberEnterPressed$;
-  readonly filteredPokemon;
+  readonly pageNumberEnterPressed$ = new BehaviorSubject<number>(1);
+  readonly filteredPokemon$;
+  readonly nameFilter = new FormControl('', { nonNullable: true });
+  readonly nameFilter$ = this.nameFilter.valueChanges.pipe(startWith(''));
 
   constructor() {
-    this.pageNumberEnterPressed$ = new BehaviorSubject<number>(1);
     this.allPokemon$ = this.pageNumberEnterPressed$.pipe(
       switchMap((pageNumber) => this.pokemonService.getPokemonPage(pageNumber)),
       catchError((error) => {
         this.alertService.createErrorAlert(error);
         return [];
       }),
-      takeUntilDestroyed(),
     );
-    this.filteredPokemon = this.allPokemon$;
+    this.filteredPokemon$ = this.allPokemon$.pipe(
+      combineLatestWith(this.nameFilter$),
+      map(([pokemonCollection, filterValue]) => {
+        if (filterValue.length === 0) {
+          return pokemonCollection;
+        }
+        return pokemonCollection.filter((pokemon) =>
+          pokemon.name.toLowerCase().includes(filterValue),
+        );
+      }),
+    );
   }
 
   onPageNumberEnter() {
     this.pageNumberEnterPressed$.next(this.pageNumber.value);
+  }
+
+  onCatch() {
+    console.log(1);
   }
 }

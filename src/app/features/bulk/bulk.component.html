@@ -1,8 +1,9 @@
 <main>
   <h1 class="first-heading__title" i18n>Bulk catch pokemon</h1>
+  <input [formControl]="nameFilter"> 
+  <button type="button" i18n (click)="onCatch()">Catch!</button>
   <ul i18n class="my-pokemon__grid">
-     
-    @for (pokemon of filteredPokemon | async; track pokemon.id) {
+    @for (pokemon of filteredPokemon$ | async; track pokemon.id) {
       <li>
         <app-pokemon-card [pokemon]="pokemon" />
       </li>
