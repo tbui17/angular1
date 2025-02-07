@@ -1,6 +1,6 @@
 import { inject, Injectable } from '@angular/core';
 import type { Observable } from 'rxjs';
-import { forkJoin, map } from 'rxjs';
+import { forkJoin, map, switchMap } from 'rxjs';
 import { HttpClient, HttpContext, HttpParams } from '@angular/common/http';
 import { CACHING_ENABLED } from '~core/interceptors/caching.interceptor';
 import type { Pokemon } from '~features/pokemon/types/pokemon.type';
@@ -24,7 +24,7 @@ export class PokemonService {
     });
   }
 
-  getPokemons(ids: number[]): Observable<Pokemon[]> {
+  getPokemons(ids: (number | string)[]): Observable<Pokemon[]> {
     const getPokemonRequests = ids.map((id) => this.getPokemon(id));
     return forkJoin(getPokemonRequests).pipe(
       map((pokemons: Pokemon[]) =>
@@ -35,9 +35,16 @@ export class PokemonService {
 
   getPokemonPage(page: number) {
     const url = `${POKEMON_API_HOST}/pokemon`;
-    return this.httpClient.get<Pokemon[]>(url, {
-      params: new HttpParams().set('limit', page).set('offset', page),
-      context: new HttpContext().set(CACHING_ENABLED, true),
-    });
+    return this.httpClient
+      .get<{ results: { name: string }[] }>(url, {
+        params: new HttpParams().set('limit', page).set('offset', page),
+        context: new HttpContext().set(CACHING_ENABLED, true),
+      })
+      .pipe(
+        switchMap((response) => {
+          const names = response.results.map((pokemon) => pokemon.name);
+          return this.getPokemons(names);
+        }),
+      );
   }
 }
