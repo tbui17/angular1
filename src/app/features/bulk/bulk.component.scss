@@ -1,0 +1,21 @@
+@use 'base/media-queries' as mq;
+@use 'components/pages';
+
+$grid-columns: 5;
+$empty-image-width: 200px;
+
+:host {
+  @include pages.read-page;
+
+  text-align: center;
+
+  .my-pokemon__grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: var(--spacing-r-xl);
+
+    @include mq.for-tablet-up {
+      grid-template-columns: repeat($grid-columns, 1fr);
+    }
+  }
+}

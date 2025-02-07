@@ -1,12 +1,12 @@
-
 <main>
   <h1 class="first-heading__title" i18n>Bulk catch pokemon</h1>
   <ul i18n class="my-pokemon__grid">
-    <!-- eslint-disable @angular-eslint/template/no-call-expression -->
-    @for (pokemon of filteredPokemon(); track pokemon.id) {
+     
+    @for (pokemon of filteredPokemon | async; track pokemon.id) {
       <li>
         <app-pokemon-card [pokemon]="pokemon" />
       </li>
     }
   </ul>
+  <input [formControl]="pageNumber" (keyup.enter)="onPageNumberEnter()">
 </main>
