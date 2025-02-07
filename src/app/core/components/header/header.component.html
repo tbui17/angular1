@@ -91,6 +91,20 @@
         </a>
       </div>
 
+       <!-- BULK -->
+       <div class="nav__item">
+        <a
+          class="nav__link"
+          routerLinkActive="active"
+          ariaCurrentWhenActive="page"
+          [routerLinkActiveOptions]="{ exact: true }"
+          [routerLink]="ROOT_PATHS.bulk"
+          (click)="closeMenu()"
+        >
+          {{ translations.bulk }}
+        </a>
+      </div>
+
       <!-- SEARCH -->
       <div class="nav__item">
         <app-pokemon-search />

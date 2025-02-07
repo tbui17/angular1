@@ -4,6 +4,7 @@ import type { Route } from '@angular/router';
 import { HomeComponent } from '~features/home/home.component';
 import { MyPokemonComponent } from '~features/my-pokemon/my-pokemon.component';
 import { authenticationGuard } from '~core/guards/authentication.guard';
+import { BulkComponent } from './features/bulk/bulk.component';
 
 export const appRoutes: Route[] = [
   {
@@ -13,6 +14,11 @@ export const appRoutes: Route[] = [
   {
     path: ROOT_PATHS.myPokemon,
     component: MyPokemonComponent,
+    canActivate: [authenticationGuard],
+  },
+  {
+    path: POKEMON_PATHS.bulk,
+    component: BulkComponent,
     canActivate: [authenticationGuard],
   },
   {
