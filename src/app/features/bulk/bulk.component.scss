@@ -6,6 +6,9 @@ $empty-image-width: 200px;
 
 :host {
   @include pages.read-page;
+  .isSelected {
+    background-color: var(--primitive-bright-blue);
+  }
 
   text-align: center;
 

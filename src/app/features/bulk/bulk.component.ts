@@ -1,14 +1,38 @@
 import { PokemonService } from '~features/pokemon/services/pokemon.service';
-import { ChangeDetectionStrategy, Component, CUSTOM_ELEMENTS_SCHEMA, inject } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  ChangeDetectorRef,
+  Component,
+  computed,
+  CUSTOM_ELEMENTS_SCHEMA,
+  inject,
+  signal,
+} from '@angular/core';
 import { PokemonCardComponent } from '../pokemon/components/pokemon-card/pokemon-card.component';
 import { AlertService } from '../../core/services/alert.service';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
-import { BehaviorSubject, catchError, combineLatestWith, map, startWith, switchMap } from 'rxjs';
-import { AsyncPipe } from '@angular/common';
+
+import {
+  BehaviorSubject,
+  catchError,
+  combineLatestWith,
+  filter,
+  map,
+  onErrorResumeNext,
+  startWith,
+  Subject,
+  switchMap,
+  tap,
+  throwError,
+} from 'rxjs';
+
+import type { Pokemon, SelectablePokemon } from '../pokemon/types/pokemon.type';
+import { UserService } from '../authentication/services/user.service';
+import type { HttpErrorResponse } from '@angular/common/http';
 
 @Component({
   selector: 'app-bulk',
-  imports: [PokemonCardComponent, ReactiveFormsModule, AsyncPipe],
+  imports: [PokemonCardComponent, ReactiveFormsModule],
   templateUrl: './bulk.component.html',
   styleUrl: './bulk.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -17,14 +41,25 @@ import { AsyncPipe } from '@angular/common';
 export class BulkComponent {
   private readonly pokemonService: PokemonService = inject(PokemonService);
   private readonly alertService = inject(AlertService);
+  private readonly userService = inject(UserService);
+  private readonly changeDetectorRef = inject(ChangeDetectorRef);
+
   private readonly allPokemon$;
 
   readonly pageNumber = new FormControl(1, { nonNullable: true });
   readonly pageNumberEnterPressed$ = new BehaviorSubject<number>(1);
   readonly filteredPokemon$;
+  readonly pokemonCollection = signal(new Array<SelectablePokemon>());
   readonly nameFilter = new FormControl('', { nonNullable: true });
   readonly nameFilter$ = this.nameFilter.valueChanges.pipe(startWith(''));
+  readonly selectedPokemon = computed(this.selectedPokemonImpl.bind(this));
+  readonly catchClicked$ = new Subject<boolean>();
 
+  private selectedPokemonImpl() {
+    return this.pokemonCollection().filter((pokemon) => pokemon.isSelected);
+  }
+
+  // eslint-disable-next-line max-lines-per-function
   constructor() {
     this.allPokemon$ = this.pageNumberEnterPressed$.pipe(
       switchMap((pageNumber) => this.pokemonService.getPokemonPage(pageNumber)),
@@ -34,6 +69,9 @@ export class BulkComponent {
       }),
     );
     this.filteredPokemon$ = this.allPokemon$.pipe(
+      map((pokemonlist) =>
+        pokemonlist.map((pokemon): SelectablePokemon => ({ ...pokemon, isSelected: false })),
+      ),
       combineLatestWith(this.nameFilter$),
       map(([pokemonCollection, filterValue]) => {
         if (filterValue.length === 0) {
@@ -44,13 +82,72 @@ export class BulkComponent {
         );
       }),
     );
+    this.filteredPokemon$.subscribe((items) => {
+      this.pokemonCollection.set(items);
+    });
+
+    this.catchClicked$
+      .pipe(
+        filter((canCatch) => canCatch),
+        map(() => this.selectedPokemon()),
+        tap(() => {
+          this.deselectAll();
+        }),
+        switchMap((pokemonList) => {
+          const obs = pokemonList.map((pokemon) =>
+            this.userService.catchPokemon({ pokemonId: pokemon.id }).pipe(
+              map(() => pokemon),
+              catchError((error: HttpErrorResponse) => {
+                this.alertService.createErrorAlert(error.message);
+                return throwError(() => error);
+              }),
+            ),
+          );
+          return onErrorResumeNext(...obs);
+        }),
+      )
+      .subscribe((response) => {
+        this.alertService.createSuccessAlert(`Caught ${response.name}`);
+      });
   }
 
   onPageNumberEnter() {
     this.pageNumberEnterPressed$.next(this.pageNumber.value);
   }
 
-  onCatch() {
-    console.log(1);
+  catchPokemon() {
+    this.catchClicked$.next(true);
+  }
+
+  onPokemonClicked(pokemon: Pokemon | undefined) {
+    if (!pokemon) {
+      throw new Error('Unexpected undefined pokemon');
+    }
+    const value = pokemon as SelectablePokemon;
+    this.pokemonCollection.update((items) => this.updatedItems(items, value.id));
+    this.changeDetectorRef.markForCheck();
+  }
+
+  private updatedItems(items: SelectablePokemon[], id: number) {
+    return items.map((item) => {
+      if (item.id !== id) {
+        return item;
+      }
+      return {
+        ...item,
+        isSelected: !item.isSelected,
+      };
+    });
+  }
+
+  private deselectAll() {
+    this.pokemonCollection.update((item) => this.deselectedAll(item));
+  }
+
+  private deselectedAll(items: SelectablePokemon[]) {
+    return items.map((item) => ({
+      ...item,
+      isSelected: false,
+    }));
   }
 }

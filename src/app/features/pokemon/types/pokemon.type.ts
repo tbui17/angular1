@@ -9,3 +9,7 @@ export type Pokemon = {
     front_shiny: string;
   };
 };
+
+export type Selectable = { isSelected: boolean };
+
+export type SelectablePokemon = Selectable & Pokemon;
