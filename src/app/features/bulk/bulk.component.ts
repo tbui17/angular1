@@ -1,7 +1,6 @@
 import { PokemonService } from '~features/pokemon/services/pokemon.service';
 import {
   ChangeDetectionStrategy,
-  ChangeDetectorRef,
   Component,
   computed,
   CUSTOM_ELEMENTS_SCHEMA,
@@ -42,7 +41,6 @@ export class BulkComponent {
   private readonly pokemonService: PokemonService = inject(PokemonService);
   private readonly alertService = inject(AlertService);
   private readonly userService = inject(UserService);
-  private readonly changeDetectorRef = inject(ChangeDetectorRef);
 
   private readonly allPokemon$;
 
@@ -125,7 +123,6 @@ export class BulkComponent {
     }
     const value = pokemon as SelectablePokemon;
     this.pokemonCollection.update((items) => this.updatedItems(items, value.id));
-    this.changeDetectorRef.markForCheck();
   }
 
   private updatedItems(items: SelectablePokemon[], id: number) {
