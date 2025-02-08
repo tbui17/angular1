@@ -37,7 +37,7 @@ export class PokemonService {
     const url = `${POKEMON_API_HOST}/pokemon`;
     return this.httpClient
       .get<{ results: { name: string }[] }>(url, {
-        params: new HttpParams().set('limit', 20).set('offset', page),
+        params: new HttpParams().set('limit', 20).set('offset', this.getOffset(page)),
         context: new HttpContext().set(CACHING_ENABLED, true),
       })
       .pipe(
@@ -46,5 +46,9 @@ export class PokemonService {
           return this.getPokemons(names);
         }),
       );
+  }
+
+  private getOffset(page: number) {
+    return Math.max(0, page - 1) * 20;
   }
 }
