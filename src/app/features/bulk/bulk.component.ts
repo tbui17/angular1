@@ -1,4 +1,3 @@
-/* eslint-disable max-lines */
 import { PokemonService } from '~features/pokemon/services/pokemon.service';
 import type { ElementRef } from '@angular/core';
 import {
@@ -20,6 +19,7 @@ import {
   catchError,
   combineLatestWith,
   filter,
+  fromEvent,
   map,
   onErrorResumeNext,
   startWith,
@@ -70,11 +70,15 @@ export class BulkComponent {
 
   // eslint-disable-next-line max-lines-per-function
   constructor() {
-    this.renderer.listen('document', 'click', (event: Event) => {
-      if (!this.pokemonCollectionElement().nativeElement.contains(event.target as Node)) {
+    fromEvent(window, 'click')
+      .pipe(
+        filter(
+          (event) => !this.pokemonCollectionElement().nativeElement.contains(event.target as Node),
+        ),
+      )
+      .subscribe(() => {
         this.deselectAll();
-      }
-    });
+      });
     this.allPokemon$ = this.pageNumberEnterPressed$.pipe(
       switchMap((pageNumber) => this.pokemonService.getPokemonPage(pageNumber)),
       catchError((error) => {
@@ -138,145 +142,17 @@ export class BulkComponent {
     this.catchClicked$.next(true);
   }
 
-  // eslint-disable-next-line max-lines-per-function
-  getNextSelectionState<T extends { isSelected: boolean }>({
-    collection,
-    hasCtrlKey,
-    hasShiftKey,
-    index,
-    lastIndex,
-  }: GetNextSelectionStateArguments<T>) {
-    const lastIndexIsUninitialized = () => lastIndex < 0;
-
-    const singleClickAction = () => ({
-      collection: collection.map((item, index_) => ({
-        ...item,
-        isSelected: index_ === index,
-      })),
-      nextLastIndexValue: index,
-    });
-
-    if (lastIndexIsUninitialized()) {
-      return singleClickAction();
-    }
-    if (hasCtrlKey) {
-      return {
-        collection: collection.map((item, index_) => {
-          if (index_ === index) {
-            return { ...item, isSelected: true };
-          }
-          return item;
-        }),
-        nextLastIndexValue: index,
-      };
-    }
-    if (hasShiftKey) {
-      return {
-        collection: updatedShiftClickSelection({
-          collection,
-          lastIndex,
-          currentIndex: index,
-        }),
-        nextLastIndexValue: lastIndex,
-      };
-    }
-
-    return singleClickAction();
-  }
-
-  // eslint-disable-next-line max-lines-per-function
   onPokemonClicked({ index, event }: PokemonCardClickEvent) {
-    const lastIndex = this.lastIndex();
-
-    const collection = this.pokemonCollection();
-
-    const hasShiftKey = event.shiftKey;
-    const hasCtrlKey = event.ctrlKey;
-
-    const lastIndexIsUninitialized = () => lastIndex < 0;
-
-    const singleClickAction = () => ({
-      pokemonCollection: collection.map((item, index_) => ({
-        ...item,
-        isSelected: index_ === index,
-      })),
-      nextLastIndexValue: index,
+    const { collection, nextLastIndexValue } = getNextSelectionState({
+      collection: this.pokemonCollection(),
+      lastIndex: this.lastIndex(),
+      hasShiftKey: event.shiftKey,
+      hasCtrlKey: event.ctrlKey,
+      index,
     });
 
-    const impl = (): UpdateValues => {
-      if (lastIndexIsUninitialized()) {
-        return singleClickAction();
-      }
-      if (hasCtrlKey) {
-        return {
-          pokemonCollection: collection.map((item, index_) => {
-            if (index_ === index) {
-              return { ...item, isSelected: true };
-            }
-            return item;
-          }),
-          nextLastIndexValue: index,
-        };
-      }
-      if (hasShiftKey) {
-        return {
-          pokemonCollection: this.updatedShiftClickSelection({
-            pokemonCollection: collection,
-            lastIndex,
-            currentIndex: index,
-          }),
-          nextLastIndexValue: lastIndex,
-        };
-      }
-
-      return singleClickAction();
-    };
-
-    const { pokemonCollection, nextLastIndexValue } = impl();
-
-    this.pokemonCollection.set(pokemonCollection);
+    this.pokemonCollection.set(collection);
     this.lastIndex.set(nextLastIndexValue);
-  }
-
-  private updatedShiftClickSelection({
-    pokemonCollection,
-    lastIndex,
-    currentIndex,
-  }: {
-    pokemonCollection: SelectablePokemon[];
-    lastIndex: number;
-    currentIndex: number;
-  }) {
-    const [start, end] = [lastIndex, currentIndex].sort((itemA, itemB) => itemA - itemB);
-
-    return pokemonCollection.map((item, index) => ({
-      ...item,
-      isSelected: index >= start && index <= end,
-    }));
-  }
-
-  private updatedShiftClickSelectionReverse({
-    pokemonCollection,
-    lastIndex,
-    currentIndex,
-  }: {
-    pokemonCollection: SelectablePokemon[];
-    lastIndex: number;
-    currentIndex: number;
-  }) {
-    const updated = pokemonCollection.map((item, index) => {
-      if (index >= currentIndex && index <= lastIndex) {
-        return {
-          ...item,
-          isSelected: true,
-        };
-      }
-      return {
-        ...item,
-        isSelected: false,
-      };
-    });
-    return updated;
   }
 
   private deselectAll() {
@@ -291,11 +167,6 @@ export class BulkComponent {
   }
 }
 
-type UpdateValues = {
-  pokemonCollection: SelectablePokemon[];
-  nextLastIndexValue: number;
-};
-
 type PokemonCardClickEvent = {
   index: number;
   event: MouseEvent;
@@ -309,7 +180,7 @@ type GetNextSelectionStateArguments<T extends { isSelected: boolean }> = {
   collection: T[];
 };
 
-function updatedShiftClickSelection<T>({
+function getShiftClickSelectionState<T>({
   collection,
   lastIndex,
   currentIndex,
@@ -324,4 +195,50 @@ function updatedShiftClickSelection<T>({
     ...item,
     isSelected: index >= start && index <= end,
   }));
+}
+
+// eslint-disable-next-line max-lines-per-function
+function getNextSelectionState<T extends { isSelected: boolean }>({
+  collection,
+  hasCtrlKey,
+  hasShiftKey,
+  index,
+  lastIndex,
+}: GetNextSelectionStateArguments<T>) {
+  const lastIndexIsUninitialized = lastIndex < 0;
+
+  const getSingleLeftClickSelectionState = () => ({
+    collection: collection.map((item, index_) => ({
+      ...item,
+      isSelected: index_ === index,
+    })),
+    nextLastIndexValue: index,
+  });
+
+  if (lastIndexIsUninitialized) {
+    return getSingleLeftClickSelectionState();
+  }
+  if (hasCtrlKey) {
+    return {
+      collection: collection.map((item, index_) => {
+        if (index_ === index) {
+          return { ...item, isSelected: true };
+        }
+        return item;
+      }),
+      nextLastIndexValue: index,
+    };
+  }
+  if (hasShiftKey) {
+    return {
+      collection: getShiftClickSelectionState({
+        collection,
+        lastIndex,
+        currentIndex: index,
+      }),
+      nextLastIndexValue: lastIndex,
+    };
+  }
+
+  return getSingleLeftClickSelectionState();
 }
