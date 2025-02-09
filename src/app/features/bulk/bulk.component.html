@@ -3,7 +3,7 @@
   <h1 class="first-heading__title" i18n>Bulk catch pokemon</h1>
   <input [formControl]="nameFilter" />
   <button type="button" i18n (click)="catchPokemon()">Catch!</button>
-  <ul i18n class="my-pokemon__grid">
+  <ul #pokemonCollectionElement i18n class="pokemon-collection__grid">
     @for (pokemon of pokemonCollection(); track pokemon.id) {
       @if (pokemon.isSelected) {
         <div class="isSelected">

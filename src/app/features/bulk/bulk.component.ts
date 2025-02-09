@@ -1,11 +1,14 @@
 import { PokemonService } from '~features/pokemon/services/pokemon.service';
+import type { ElementRef } from '@angular/core';
 import {
   ChangeDetectionStrategy,
   Component,
   computed,
   CUSTOM_ELEMENTS_SCHEMA,
   inject,
+  Renderer2,
   signal,
+  viewChild,
 } from '@angular/core';
 import { PokemonCardComponent } from '../pokemon/components/pokemon-card/pokemon-card.component';
 import { AlertService } from '../../core/services/alert.service';
@@ -55,6 +58,10 @@ export class BulkComponent {
   readonly catchClicked$ = new Subject<boolean>();
   readonly lastIndex = signal(-1);
   readonly pageCount$;
+  private readonly pokemonCollectionElement = viewChild.required<ElementRef<HTMLDivElement>>(
+    'pokemonCollectionElement',
+  );
+  private readonly renderer = inject(Renderer2);
 
   private selectedPokemonImpl() {
     return this.pokemonCollection().filter((pokemon) => pokemon.isSelected);
@@ -62,6 +69,11 @@ export class BulkComponent {
 
   // eslint-disable-next-line max-lines-per-function
   constructor() {
+    this.renderer.listen('document', 'click', (event: Event) => {
+      if (!this.pokemonCollectionElement().nativeElement.contains(event.target as Node)) {
+        this.deselectAll();
+      }
+    });
     this.allPokemon$ = this.pageNumberEnterPressed$.pipe(
       switchMap((pageNumber) => this.pokemonService.getPokemonPage(pageNumber)),
       catchError((error) => {
