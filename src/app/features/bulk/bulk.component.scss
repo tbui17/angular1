@@ -11,11 +11,16 @@ $empty-image-width: 200px;
   }
 
   text-align: center;
+  
 
   .my-pokemon__grid {
+
     display: grid;
     grid-template-columns: 1fr;
     gap: var(--spacing-r-xl);
+    border: thick solid var(--secondary-contrast);
+    width: 150%;
+    
 
     @include mq.for-tablet-up {
       grid-template-columns: repeat($grid-columns, 1fr);
