@@ -52,6 +52,7 @@ export class BulkComponent {
   readonly nameFilter$ = this.nameFilter.valueChanges.pipe(startWith(''));
   readonly selectedPokemon = computed(this.selectedPokemonImpl.bind(this));
   readonly catchClicked$ = new Subject<boolean>();
+  readonly lastIndex = signal(-1);
 
   private selectedPokemonImpl() {
     return this.pokemonCollection().filter((pokemon) => pokemon.isSelected);
@@ -82,6 +83,7 @@ export class BulkComponent {
     );
     this.filteredPokemon$.subscribe((items) => {
       this.pokemonCollection.set(items);
+      this.lastIndex.set(-1);
     });
 
     this.catchClicked$
@@ -117,15 +119,76 @@ export class BulkComponent {
     this.catchClicked$.next(true);
   }
 
-  onPokemonClicked(pokemon: Pokemon | undefined) {
+  onPokemonClicked({ pokemon, event }: PokemonCardClickEvent) {
+    const mouseEvent = event as MouseEvent;
     if (!pokemon) {
       throw new Error('Unexpected undefined pokemon');
     }
     const value = pokemon as SelectablePokemon;
-    this.pokemonCollection.update((items) => this.updatedItems(items, value.id));
+    const lastIndex = this.lastIndex();
+    const pokemonCollection = this.pokemonCollection();
+
+    this.handlePokemonSelection({
+      value,
+      lastIndex,
+      mouseEvent,
+      pokemonCollection,
+    });
   }
 
-  private updatedItems(items: SelectablePokemon[], id: number) {
+  private handlePokemonSelection({
+    value,
+    lastIndex,
+    mouseEvent,
+    pokemonCollection,
+  }: {
+    value: SelectablePokemon;
+    lastIndex: number;
+    mouseEvent: MouseEvent;
+    pokemonCollection: SelectablePokemon[];
+  }) {
+    const index = pokemonCollection.findIndex((pokemon2) => pokemon2.id === value.id);
+    if (mouseEvent.shiftKey && lastIndex >= 0) {
+      this.updateShiftClickSelection({
+        pokemonCollection,
+        lastIndex,
+        currentIndex: index,
+      });
+    } else {
+      this.pokemonCollection.update((items) => this.selectionReversedItems(items, value.id));
+    }
+    this.lastIndex.set(index);
+  }
+
+  private updateShiftClickSelection({
+    pokemonCollection,
+    lastIndex,
+    currentIndex,
+  }: {
+    pokemonCollection: SelectablePokemon[];
+    lastIndex: number;
+    currentIndex: number;
+  }) {
+    let lastItem: SelectablePokemon | undefined;
+    const updated = pokemonCollection.map((item, index_) => {
+      if (!lastItem) {
+        if (index_ === lastIndex) {
+          lastItem = item;
+          return item;
+        }
+        return item;
+      }
+      if (index_ <= currentIndex) {
+        return {
+          ...item,
+          isSelected: lastItem.isSelected,
+        };
+      }
+      return item;
+    });
+    this.pokemonCollection.set(updated);
+  }
+  private selectionReversedItems(items: SelectablePokemon[], id: number) {
     return items.map((item) => {
       if (item.id !== id) {
         return item;
@@ -148,3 +211,8 @@ export class BulkComponent {
     }));
   }
 }
+
+type PokemonCardClickEvent = {
+  pokemon: Pokemon | undefined;
+  event: Event;
+};

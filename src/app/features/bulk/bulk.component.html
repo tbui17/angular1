@@ -7,11 +7,11 @@
     @for (pokemon of pokemonCollection(); track pokemon.id) {
       @if (pokemon.isSelected) {
         <div class="isSelected">
-          <app-pokemon-card [pokemon]="pokemon" (click)="onPokemonClicked(pokemon)" />
+          <app-pokemon-card [pokemon]="pokemon" (click)="onPokemonClicked({pokemon:pokemon,event:$event})" />
         </div>
       } @else {
         <li>
-          <app-pokemon-card [pokemon]="pokemon" (click)="onPokemonClicked(pokemon)" />
+          <app-pokemon-card [pokemon]="pokemon" (click)="onPokemonClicked({pokemon:pokemon,event:$event})" />
         </li>
       }
     }
