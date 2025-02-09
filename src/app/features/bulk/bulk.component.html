@@ -7,14 +7,24 @@
     @for (pokemon of pokemonCollection(); track pokemon.id) {
       @if (pokemon.isSelected) {
         <div class="isSelected">
-          <app-pokemon-card [pokemon]="pokemon" (click)="onPokemonClicked({pokemon:pokemon,event:$event})" />
+          <app-pokemon-card
+            [pokemon]="pokemon"
+            (click)="onPokemonClicked({pokemon:pokemon,event:$event})"
+          />
         </div>
       } @else {
         <li>
-          <app-pokemon-card [pokemon]="pokemon" (click)="onPokemonClicked({pokemon:pokemon,event:$event})" />
+          <app-pokemon-card
+            [pokemon]="pokemon"
+            (click)="onPokemonClicked({pokemon:pokemon,event:$event})"
+          />
         </li>
       }
     }
   </ul>
-  <input [formControl]="pageNumber" (keyup.enter)="onPageNumberEnter()" />
+  <div class="pagination-info">
+    <input class="pagination-info__page-input" [formControl]="pageNumber" (keyup.enter)="onPageNumberEnter()" />
+    <p i18n>of</p>
+    <p>{{pageCount$ | async}}</p>
+  </div>
 </main>

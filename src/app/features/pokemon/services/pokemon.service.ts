@@ -36,7 +36,7 @@ export class PokemonService {
   getPokemonPage(page: number) {
     const url = `${POKEMON_API_HOST}/pokemon`;
     return this.httpClient
-      .get<{ results: { name: string }[] }>(url, {
+      .get<{ results: { name: string }[]; count: number }>(url, {
         params: new HttpParams().set('limit', 20).set('offset', this.getOffset(page)),
         context: new HttpContext().set(CACHING_ENABLED, true),
       })
@@ -45,6 +45,18 @@ export class PokemonService {
           const names = response.results.map((pokemon) => pokemon.name);
           return this.getPokemons(names);
         }),
+      );
+  }
+
+  getPageCount(){
+    const url = `${POKEMON_API_HOST}/pokemon`;
+    return this.httpClient
+      .get<{ results: { name: string }[]; count: number }>(url, {
+        params: new HttpParams().set('limit', 1),
+        context: new HttpContext().set(CACHING_ENABLED, false),
+      })
+      .pipe(
+        map(response => Math.ceil(response.count / 20))
       );
   }
 

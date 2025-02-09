@@ -28,10 +28,11 @@ import {
 import type { Pokemon, SelectablePokemon } from '../pokemon/types/pokemon.type';
 import { UserService } from '../authentication/services/user.service';
 import type { HttpErrorResponse } from '@angular/common/http';
+import { AsyncPipe } from '@angular/common';
 
 @Component({
   selector: 'app-bulk',
-  imports: [PokemonCardComponent, ReactiveFormsModule],
+  imports: [PokemonCardComponent, ReactiveFormsModule, AsyncPipe],
   templateUrl: './bulk.component.html',
   styleUrl: './bulk.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -53,6 +54,7 @@ export class BulkComponent {
   readonly selectedPokemon = computed(this.selectedPokemonImpl.bind(this));
   readonly catchClicked$ = new Subject<boolean>();
   readonly lastIndex = signal(-1);
+  readonly pageCount$;
 
   private selectedPokemonImpl() {
     return this.pokemonCollection().filter((pokemon) => pokemon.isSelected);
@@ -109,6 +111,7 @@ export class BulkComponent {
       .subscribe((response) => {
         this.alertService.createSuccessAlert(`Caught ${response.name}`);
       });
+    this.pageCount$ = this.pokemonService.getPageCount();
   }
 
   onPageNumberEnter() {

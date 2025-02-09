@@ -21,4 +21,16 @@ $empty-image-width: 200px;
       grid-template-columns: repeat($grid-columns, 1fr);
     }
   }
+
+  .pagination-info {
+    display: flex;
+    flex-flow: row;
+    width:30%;
+    justify-self: center;
+    gap:2rem;
+  }
+
+  .pagination-info__page-input {
+    width: 4rem;
+  }
 }
