@@ -61,6 +61,8 @@ export class BulkComponent {
   private readonly pokemonCollectionElement = viewChild.required<ElementRef<HTMLDivElement>>(
     'pokemonCollectionElement',
   );
+  private readonly catchElement = viewChild.required<ElementRef<HTMLButtonElement>>('catch');
+  readonly isLoading = signal(false);
 
   private selectedPokemonImpl() {
     return this.pokemonCollection().filter((pokemon) => pokemon.isSelected);
@@ -70,14 +72,20 @@ export class BulkComponent {
   constructor() {
     fromEvent(window, 'click')
       .pipe(
-        filter(
-          (event) => !this.pokemonCollectionElement().nativeElement.contains(event.target as Node),
-        ),
+        filter(({ target }) => {
+          const node = target as Node;
+          const collection = this.pokemonCollectionElement().nativeElement;
+          const catchElement = this.catchElement().nativeElement;
+          return !collection.contains(node) && node !== catchElement;
+        }),
       )
       .subscribe(() => {
         this.deselectAll();
       });
     this.allPokemon$ = this.pageNumberEnterPressed$.pipe(
+      tap(() => {
+        this.isLoading.set(true);
+      }),
       switchMap((pageNumber) => this.pokemonService.getPokemonPage(pageNumber)),
       catchError((error) => {
         this.alertService.createErrorAlert(error);
@@ -104,6 +112,7 @@ export class BulkComponent {
     this.filteredPokemon$.subscribe((items) => {
       this.pokemonCollection.set(items);
       this.lastIndex.set(-1);
+      this.isLoading.set(false);
     });
 
     this.catchClicked$

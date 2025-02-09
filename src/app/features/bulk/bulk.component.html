@@ -2,29 +2,35 @@
 <main>
   <h1 class="first-heading__title" i18n>Bulk catch pokemon</h1>
   <input [formControl]="nameFilter" />
-  <button type="button" i18n (click)="catchPokemon()">Catch!</button>
-  <ul #pokemonCollectionElement i18n class="pokemon-collection__grid">
-    @for (pokemon of pokemonCollection(); track pokemon.id; let index = $index) {
-      @if (pokemon.isSelected) {
-        <div class="isSelected">
-          <app-pokemon-card
-            [pokemon]="pokemon"
-            (click)="onPokemonClicked({index:index,event:$event})"
-          />
-        </div>
-      } @else {
-        <li>
-          <app-pokemon-card
-            [pokemon]="pokemon"
-            (click)="onPokemonClicked({index:index,event:$event})"
-          />
-        </li>
+  <button #catch type="button" i18n (click)="catchPokemon()">Catch!</button>
+  @if (isLoading()) {
+    <p i18n>Loading...</p>
+  }
+  @else {
+    <ul #pokemonCollectionElement i18n class="pokemon-collection__grid">
+      @for (pokemon of pokemonCollection(); track pokemon.id; let index = $index) {
+        @if (pokemon.isSelected) {
+          <div class="isSelected">
+            <app-pokemon-card
+              [pokemon]="pokemon"
+              (click)="onPokemonClicked({index:index,event:$event})"
+            />
+          </div>
+        } @else {
+          <li>
+            <app-pokemon-card
+              [pokemon]="pokemon"
+              (click)="onPokemonClicked({index:index,event:$event})"
+            />
+          </li>
+        }
       }
-    }
-  </ul>
-  <div class="pagination-info">
-    <input class="pagination-info__page-input" [formControl]="pageNumber" (keyup.enter)="onPageNumberEnter()" />
-    <p i18n>of</p>
-    <p>{{pageCount$ | async}}</p>
-  </div>
+    </ul>
+    <div class="pagination-info">
+      <input class="pagination-info__page-input" [formControl]="pageNumber" (keyup.enter)="onPageNumberEnter()" />
+      <p i18n>of</p>
+      <p>{{pageCount$ | async}}</p>
+    </div>
+  }
+  
 </main>
