@@ -4,19 +4,19 @@
   <input [formControl]="nameFilter" />
   <button type="button" i18n (click)="catchPokemon()">Catch!</button>
   <ul #pokemonCollectionElement i18n class="pokemon-collection__grid">
-    @for (pokemon of pokemonCollection(); track pokemon.id) {
+    @for (pokemon of pokemonCollection(); track pokemon.id; let index = $index) {
       @if (pokemon.isSelected) {
         <div class="isSelected">
           <app-pokemon-card
             [pokemon]="pokemon"
-            (click)="onPokemonClicked({pokemon:pokemon,event:$event})"
+            (click)="onPokemonClicked({index:index,event:$event})"
           />
         </div>
       } @else {
         <li>
           <app-pokemon-card
             [pokemon]="pokemon"
-            (click)="onPokemonClicked({pokemon:pokemon,event:$event})"
+            (click)="onPokemonClicked({index:index,event:$event})"
           />
         </li>
       }
