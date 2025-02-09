@@ -28,7 +28,7 @@ import {
   throwError,
 } from 'rxjs';
 
-import type { SelectablePokemon } from '../pokemon/types/pokemon.type';
+import type { Selectable, SelectablePokemon } from '../pokemon/types/pokemon.type';
 import { UserService } from '../authentication/services/user.service';
 import type { HttpErrorResponse } from '@angular/common/http';
 import { AsyncPipe } from '@angular/common';
@@ -179,7 +179,7 @@ type PokemonCardClickEvent = {
   event: MouseEvent;
 };
 
-type GetNextSelectionStateArguments<T extends { isSelected: boolean }> = {
+type GetNextSelectionStateArguments<T extends Selectable> = {
   index: number;
   lastIndex: number;
   hasShiftKey: boolean;
@@ -205,7 +205,7 @@ function getShiftClickSelectionState<T>({
 }
 
 // eslint-disable-next-line max-lines-per-function
-function getNextSelectionState<T extends { isSelected: boolean }>({
+function getNextSelectionState<T extends Selectable>({
   collection,
   hasCtrlKey,
   hasShiftKey,
