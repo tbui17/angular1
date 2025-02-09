@@ -146,6 +146,9 @@ export class BulkComponent {
   }
 
   catchPokemon() {
+    if (this.selectedPokemon().length === 0) {
+      return;
+    }
     this.catchClicked$.next(true);
   }
 
