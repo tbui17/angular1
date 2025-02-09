@@ -19,7 +19,7 @@ $empty-image-width: 200px;
     grid-template-columns: 1fr;
     gap: var(--spacing-r-xl);
     border: thick solid var(--secondary-contrast);
-    width: 150%;
+    width: 120%;
     
 
     @include mq.for-tablet-up {
