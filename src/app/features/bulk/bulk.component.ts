@@ -6,7 +6,6 @@ import {
   computed,
   CUSTOM_ELEMENTS_SCHEMA,
   inject,
-  Renderer2,
   signal,
   viewChild,
 } from '@angular/core';
@@ -62,7 +61,6 @@ export class BulkComponent {
   private readonly pokemonCollectionElement = viewChild.required<ElementRef<HTMLDivElement>>(
     'pokemonCollectionElement',
   );
-  private readonly renderer = inject(Renderer2);
 
   private selectedPokemonImpl() {
     return this.pokemonCollection().filter((pokemon) => pokemon.isSelected);
