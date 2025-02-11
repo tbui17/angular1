@@ -1,3 +1,5 @@
+/* eslint-disable id-length */
+
 import { PokemonService } from '~features/pokemon/services/pokemon.service';
 import type { ElementRef } from '@angular/core';
 import {
@@ -12,7 +14,7 @@ import {
 import { PokemonCardComponent } from '../../../pokemon/components/pokemon-card/pokemon-card.component';
 import { AlertService } from '../../../../core/services/alert.service';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
-import { sortBy } from 'remeda';
+import { sort, sortBy } from 'remeda';
 
 import {
   BehaviorSubject,
@@ -34,6 +36,7 @@ import { UserService } from '../../../authentication/services/user.service';
 import type { HttpErrorResponse } from '@angular/common/http';
 import { AsyncPipe } from '@angular/common';
 import { toObservable } from '@angular/core/rxjs-interop';
+import { produceEach } from '../../../../../util';
 
 @Component({
   selector: 'app-bulk',
@@ -172,7 +175,12 @@ export class BulkComponent {
   onPokemonClicked({ index, event }: PokemonCardClickEvent) {
     const { collection, nextLastIndexValue } = getNextSelectionState({
       collection: this.pokemonCollection(),
-      lastIndex: this.lastIndex(),
+      lastIndex: {
+        value: this.lastIndex(),
+        get isUninitialized() {
+          return this.value < 0;
+        },
+      },
       hasShiftKey: event.shiftKey,
       hasCtrlKey: event.ctrlKey,
       index,
@@ -187,10 +195,7 @@ export class BulkComponent {
   }
 
   private deselectedAll(items: SelectablePokemon[]) {
-    return items.map((item) => ({
-      ...item,
-      isSelected: false,
-    }));
+    return produceEach(items, (x) => (x.isSelected = false));
   }
 
   toggleSortOrder() {
@@ -205,13 +210,13 @@ type PokemonCardClickEvent = {
 
 type GetNextSelectionStateArguments<T extends Selectable> = {
   index: number;
-  lastIndex: number;
+  lastIndex: LastIndex;
   hasShiftKey: boolean;
   hasCtrlKey: boolean;
   collection: T[];
 };
 
-function getShiftClickSelectionState<T>({
+function getShiftClickSelectionState<T extends { isSelected: boolean }>({
   collection,
   lastIndex,
   currentIndex,
@@ -220,13 +225,16 @@ function getShiftClickSelectionState<T>({
   lastIndex: number;
   currentIndex: number;
 }) {
-  const [start, end] = [lastIndex, currentIndex].sort((itemA, itemB) => itemA - itemB);
-
-  return collection.map((item, index) => ({
-    ...item,
-    isSelected: index >= start && index <= end,
-  }));
+  const [start, end] = sort([lastIndex, currentIndex], (x) => x);
+  return produceEach(collection, (item, index) => {
+    item.isSelected = index >= start && index <= end;
+  });
 }
+
+type LastIndex = {
+  value: number;
+  isUninitialized: boolean;
+};
 
 // eslint-disable-next-line max-lines-per-function
 function getNextSelectionState<T extends Selectable>({
@@ -234,28 +242,22 @@ function getNextSelectionState<T extends Selectable>({
   hasCtrlKey,
   hasShiftKey,
   index,
-  lastIndex,
+  lastIndex: { value: lastIndex, isUninitialized },
 }: GetNextSelectionStateArguments<T>) {
-  const lastIndexIsUninitialized = lastIndex < 0;
-
   const getSingleLeftClickSelectionState = () => ({
-    collection: collection.map((item, index_) => ({
-      ...item,
-      isSelected: index_ === index,
-    })),
+    collection: produceEach(collection, (item, index_) => (item.isSelected = index_ === index)),
     nextLastIndexValue: index,
   });
 
-  if (lastIndexIsUninitialized) {
+  if (isUninitialized) {
     return getSingleLeftClickSelectionState();
   }
   if (hasCtrlKey) {
     return {
-      collection: collection.map((item, index_) => {
+      collection: produceEach(collection, (item, index_) => {
         if (index_ === index) {
-          return { ...item, isSelected: true };
+          item.isSelected = true;
         }
-        return item;
       }),
       nextLastIndexValue: index,
     };
