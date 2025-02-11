@@ -59,7 +59,6 @@ export class BulkComponent {
   readonly selectedPokemon = computed(this.selectedPokemonImpl.bind(this));
   readonly catchClicked$ = new Subject<boolean>();
   readonly lastIndex = signal(-1);
-  // eslint-disable-next-line unicorn/consistent-function-scoping
   readonly sortOptions = ['Order', 'Name', 'Height', 'Weight'];
   readonly selectedSortOption = new FormControl('Order', { nonNullable: true });
   readonly isSortedAscending = signal(true);
