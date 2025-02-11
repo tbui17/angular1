@@ -6,7 +6,8 @@ $empty-image-width: 200px;
 
 :host {
   @include pages.read-page;
-  .isSelected {
+  
+  [aria-selected="true"] {
     background-color: var(--primitive-bright-blue);
   }
 

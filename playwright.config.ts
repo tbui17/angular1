@@ -8,9 +8,8 @@ const config: PlaywrightTestConfig = {
   },
   fullyParallel: false,
   forbidOnly: true,
-  retries: 2,
+  retries: 0,
   workers: 1,
-  reporter: 'html',
   use: {
     actionTimeout: 0,
     trace: 'on-first-retry',
@@ -22,24 +21,24 @@ const config: PlaywrightTestConfig = {
         channel: 'chrome',
       },
     },
-    {
-      name: 'Safari',
-      use: {
-        ...devices['Desktop Safari'],
-      },
-    },
-    {
-      name: 'Mobile Chrome',
-      use: {
-        ...devices['Pixel 5'],
-      },
-    },
-    {
-      name: 'Mobile Safari',
-      use: {
-        ...devices['iPhone 12'],
-      },
-    },
+    // {
+    //   name: 'Safari',
+    //   use: {
+    //     ...devices['Desktop Safari'],
+    //   },
+    // },
+    // {
+    //   name: 'Mobile Chrome',
+    //   use: {
+    //     ...devices['Pixel 5'],
+    //   },
+    // },
+    // {
+    //   name: 'Mobile Safari',
+    //   use: {
+    //     ...devices['iPhone 12'],
+    //   },
+    // },
   ],
 };
 

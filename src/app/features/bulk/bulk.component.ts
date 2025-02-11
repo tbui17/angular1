@@ -104,8 +104,9 @@ export class BulkComponent {
         if (filterValue.length === 0) {
           return pokemonCollection;
         }
+        const lowerFilterValue = filterValue.toLowerCase();
         return pokemonCollection.filter((pokemon) =>
-          pokemon.name.toLowerCase().includes(filterValue),
+          pokemon.name.toLowerCase().includes(lowerFilterValue),
         );
       }),
     );
