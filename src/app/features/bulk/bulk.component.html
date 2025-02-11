@@ -7,14 +7,14 @@
       <option [value]="option">{{option}}</option>
     }
   </select>
-  <button #catch type="button" i18n (click)="catchPokemon()">Catch!</button>
   <button type="button" aria-label="Sort Order" (click)="toggleSortOrder()">
-    @if (isSortedAscending()) {
-      <span i18n>Ascending</span>
-    } @else {
+    @if (isSortedDescending()) {
       <span i18n>Descending</span>
+    } @else {
+      <span i18n>Ascending</span>
     }
   </button>
+  <button #catch type="button" i18n (click)="catchPokemon()">Catch!</button>
   @if (isLoading()) {
     <p i18n>Loading...</p>
   } @else {

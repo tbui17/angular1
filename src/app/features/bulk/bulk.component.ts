@@ -61,7 +61,7 @@ export class BulkComponent {
   readonly lastIndex = signal(-1);
   readonly sortOptions = ['Order', 'Name', 'Height', 'Weight'];
   readonly selectedSortOption = new FormControl('Order', { nonNullable: true });
-  readonly isSortedAscending = signal(true);
+  readonly isSortedDescending = signal(true);
 
   readonly pageCount$;
   private readonly pokemonCollectionElement = viewChild.required<ElementRef<HTMLDivElement>>(
@@ -108,7 +108,7 @@ export class BulkComponent {
       combineLatestWith(
         this.nameFilter$,
         this.selectedSortOption.valueChanges.pipe(startWith(this.selectedSortOption.value)),
-        toObservable(this.isSortedAscending),
+        toObservable(this.isSortedDescending),
       ),
       map(([pokemonCollection, filterValue, sortValue, isSortedAscending]) => {
         const lowerFilterValue = filterValue.toLowerCase();
@@ -194,7 +194,7 @@ export class BulkComponent {
   }
 
   toggleSortOrder() {
-    this.isSortedAscending.update((value) => !value);
+    this.isSortedDescending.update((value) => !value);
   }
 }
 
