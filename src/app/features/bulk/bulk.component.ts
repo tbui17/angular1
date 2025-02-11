@@ -12,6 +12,7 @@ import {
 import { PokemonCardComponent } from '../pokemon/components/pokemon-card/pokemon-card.component';
 import { AlertService } from '../../core/services/alert.service';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
+import { sortBy } from 'remeda';
 
 import {
   BehaviorSubject,
@@ -32,6 +33,7 @@ import type { Selectable, SelectablePokemon } from '../pokemon/types/pokemon.typ
 import { UserService } from '../authentication/services/user.service';
 import type { HttpErrorResponse } from '@angular/common/http';
 import { AsyncPipe } from '@angular/common';
+import { toObservable } from '@angular/core/rxjs-interop';
 
 @Component({
   selector: 'app-bulk',
@@ -57,6 +59,11 @@ export class BulkComponent {
   readonly selectedPokemon = computed(this.selectedPokemonImpl.bind(this));
   readonly catchClicked$ = new Subject<boolean>();
   readonly lastIndex = signal(-1);
+  // eslint-disable-next-line unicorn/consistent-function-scoping
+  readonly sortOptions = ['Order', 'Name', 'Height', 'Weight'];
+  readonly selectedSortOption = new FormControl('Order', { nonNullable: true });
+  readonly isSortedAscending = signal(true);
+
   readonly pageCount$;
   private readonly pokemonCollectionElement = viewChild.required<ElementRef<HTMLDivElement>>(
     'pokemonCollectionElement',
@@ -99,15 +106,25 @@ export class BulkComponent {
           return result;
         }),
       ),
-      combineLatestWith(this.nameFilter$),
-      map(([pokemonCollection, filterValue]) => {
-        if (filterValue.length === 0) {
-          return pokemonCollection;
-        }
+      combineLatestWith(
+        this.nameFilter$,
+        this.selectedSortOption.valueChanges.pipe(startWith(this.selectedSortOption.value)),
+        toObservable(this.isSortedAscending),
+      ),
+      map(([pokemonCollection, filterValue, sortValue, isSortedAscending]) => {
         const lowerFilterValue = filterValue.toLowerCase();
-        return pokemonCollection.filter((pokemon) =>
+        const filtered = pokemonCollection.filter((pokemon) =>
           pokemon.name.toLowerCase().includes(lowerFilterValue),
         );
+
+        const sorted = sortBy(
+          filtered,
+          (pokemon) => pokemon[sortValue.toLowerCase() as keyof SelectablePokemon],
+        );
+        if (!isSortedAscending) {
+          return sorted.reverse();
+        }
+        return sorted;
       }),
     );
     this.filteredPokemon$.subscribe((items) => {
@@ -175,6 +192,10 @@ export class BulkComponent {
       ...item,
       isSelected: false,
     }));
+  }
+
+  toggleSortOrder() {
+    this.isSortedAscending.update((value) => !value);
   }
 }
 

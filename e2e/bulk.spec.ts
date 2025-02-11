@@ -49,3 +49,15 @@ test.describe('Selection', () => {
     await expect(bulkPage.page.getByTitle('Bulbasaur')).not.toBeSelected();
   });
 });
+
+test.describe('Sorting', () => {
+  test('should sort by name in descending order', async ({ bulkPage }) => {
+    await bulkPage.sortByNameDescending();
+    const cards = await bulkPage.pokemonCards.all();
+    const names = await Promise.all(
+      cards.slice(0, 3).map(async (element) => element.getByLabel('Name').textContent()),
+    );
+    const lowerNames = names.map((name) => name?.toLowerCase());
+    expect(lowerNames).toStrictEqual(['weedle', 'wartortle', 'venusaur']);
+  });
+});

@@ -2,7 +2,7 @@
 @if (!loading()) {
   <app-card>
     <ng-container i18n ngProjectAs="heading">
-      <h2 class="card__heading">{{ pokemon()?.name | firstTitleCase }}</h2>
+      <h2 aria-label="Name" class="card__heading">{{ pokemon()?.name | firstTitleCase }}</h2>
     </ng-container>
     <ng-container ngProjectAs="body">
       <div class="pokemon__image-container">

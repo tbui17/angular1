@@ -2,7 +2,19 @@
 <main>
   <h1 class="first-heading__title" i18n>Bulk catch pokemon</h1>
   <input title="Filter" [formControl]="nameFilter" />
+  <select aria-label="Sort By" defaultValue="Order" [formControl]="selectedSortOption">
+    @for (option of sortOptions; track option) {
+      <option [value]="option">{{option}}</option>
+    }
+  </select>
   <button #catch type="button" i18n (click)="catchPokemon()">Catch!</button>
+  <button type="button" aria-label="Sort Order" (click)="toggleSortOrder()">
+    @if (isSortedAscending()) {
+      <span i18n>Ascending</span>
+    } @else {
+      <span i18n>Descending</span>
+    }
+  </button>
   @if (isLoading()) {
     <p i18n>Loading...</p>
   } @else {
