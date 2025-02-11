@@ -1,0 +1,55 @@
+<!-- eslint-disable @angular-eslint/template/no-call-expression -->
+<main>
+  <h1 class="first-heading__title" i18n>Bulk catch pokemon</h1>
+  <input title="Filter" [formControl]="nameFilter" />
+  <select aria-label="Sort By" defaultValue="Order" [formControl]="selectedSortOption">
+    @for (option of sortOptions; track option) {
+      <option [value]="option">{{option}}</option>
+    }
+  </select>
+  <button type="button" aria-label="Sort Order" (click)="toggleSortOrder()">
+    @if (isSortedDescending()) {
+      <span i18n>Descending</span>
+    } @else {
+      <span i18n>Ascending</span>
+    }
+  </button>
+  <button #catch type="button" i18n (click)="catchPokemon()">Catch!</button>
+  @if (isLoading()) {
+    <p i18n>Loading...</p>
+  } @else {
+    <ul #pokemonCollectionElement i18n class="pokemon-collection__grid" title="Pokemon Cards">
+      @for (pokemon of pokemonCollection(); track pokemon.id; let index = $index) {
+        @if (pokemon.isSelected) {
+          <app-pokemon-card
+            aria-selected="true"
+            tabindex="0"
+            [pokemon]="pokemon"
+            [title]="pokemon.name"
+            (click)="onPokemonClicked({index:index,event:$event})"
+          />
+        } @else {
+          <li>
+            <app-pokemon-card
+              aria-selected="false"
+              tabindex="0"
+              [pokemon]="pokemon"
+              [title]="pokemon.name"
+              (click)="onPokemonClicked({index:index,event:$event})"
+            />
+          </li>
+        }
+      }
+    </ul>
+    <div class="pagination-info">
+      <input
+        class="pagination-info__page-input"
+        title="Current Page"
+        [formControl]="pageNumber"
+        (keyup.enter)="onPageNumberEnter()"
+      />
+      <p i18n>of</p>
+      <p>{{pageCount$ | async}}</p>
+    </div>
+  }
+</main>
