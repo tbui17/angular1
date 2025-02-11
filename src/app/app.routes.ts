@@ -4,7 +4,7 @@ import type { Route } from '@angular/router';
 import { HomeComponent } from '~features/home/home.component';
 import { MyPokemonComponent } from '~features/my-pokemon/my-pokemon.component';
 import { authenticationGuard } from '~core/guards/authentication.guard';
-import { BulkComponent } from './features/bulk/bulk.component';
+import { BulkComponent } from './features/bulk/components/bulk/bulk.component';
 
 export const appRoutes: Route[] = [
   {
