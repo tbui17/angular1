@@ -5,7 +5,7 @@ import eslintComments from 'eslint-plugin-eslint-comments';
 import typescriptEslint from '@typescript-eslint/eslint-plugin';
 import eslintConfigPrettier from 'eslint-config-prettier';
 import pluginPromise from 'eslint-plugin-promise';
-import eslintPluginUnicorn from 'eslint-plugin-unicorn';
+// import eslintPluginUnicorn from 'eslint-plugin-unicorn';
 
 const APP_PREFIX = 'app';
 
@@ -21,10 +21,10 @@ export default tsEslint.config(
       },
     },
     extends: [
-      eslint.configs.all,
-      ...tsEslint.configs.all,
+      // eslint.configs.all,
+      // ...tsEslint.configs.all,
       ...angular.configs.tsAll,
-      eslintPluginUnicorn.configs['flat/all'],
+      // eslintPluginUnicorn.configs['flat/all'],
       pluginPromise.configs['flat/recommended'],
     ],
     plugins: {

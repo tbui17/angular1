@@ -1,5 +1,3 @@
-/* eslint-disable id-length */
-
 import { PokemonService } from '~features/pokemon/services/pokemon.service';
 import type { ElementRef } from '@angular/core';
 import {
@@ -14,7 +12,7 @@ import {
 import { PokemonCardComponent } from '../../../pokemon/components/pokemon-card/pokemon-card.component';
 import { AlertService } from '../../../../core/services/alert.service';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
-import { sort, sortBy } from 'remeda';
+import { sortBy } from 'remeda';
 
 import {
   BehaviorSubject,
@@ -31,12 +29,12 @@ import {
   throwError,
 } from 'rxjs';
 
-import type { Selectable, SelectablePokemon } from '../../../pokemon/types/pokemon.type';
+import type { SelectablePokemon } from '../../../pokemon/types/pokemon.type';
 import { UserService } from '../../../authentication/services/user.service';
 import type { HttpErrorResponse } from '@angular/common/http';
 import { AsyncPipe } from '@angular/common';
 import { toObservable } from '@angular/core/rxjs-interop';
-import { produceEach } from '../../../../../util';
+import { SelectionService } from '../../services/selection.service';
 
 @Component({
   selector: 'app-bulk',
@@ -50,6 +48,7 @@ export class BulkComponent {
   private readonly pokemonService: PokemonService = inject(PokemonService);
   private readonly alertService = inject(AlertService);
   private readonly userService = inject(UserService);
+  private readonly selectionService = inject(SelectionService);
 
   private readonly allPokemon$;
 
@@ -61,7 +60,6 @@ export class BulkComponent {
   readonly nameFilter$ = this.nameFilter.valueChanges.pipe(startWith(''));
   readonly selectedPokemon = computed(this.selectedPokemonImpl.bind(this));
   readonly catchClicked$ = new Subject<boolean>();
-  readonly lastIndex = signal(-1);
   readonly sortOptions = ['Order', 'Name', 'Height', 'Weight'];
   readonly selectedSortOption = new FormControl('Order', { nonNullable: true });
   readonly isSortedDescending = signal(true);
@@ -74,11 +72,15 @@ export class BulkComponent {
   readonly isLoading = signal(false);
 
   private selectedPokemonImpl() {
-    return this.pokemonCollection().filter((pokemon) => pokemon.isSelected);
+    const collection = this.pokemonCollection();
+    return this.selectionService.selected().map((index) => collection[index]);
   }
 
   // eslint-disable-next-line max-lines-per-function
   constructor() {
+    this.pageCount$ = this.pokemonService.getPageCount();
+
+    // reset selection after clicking outside
     fromEvent(window, 'click')
       .pipe(
         filter(({ target }) => {
@@ -89,8 +91,10 @@ export class BulkComponent {
         }),
       )
       .subscribe(() => {
-        this.deselectAll();
+        this.selectionService.clear();
       });
+
+    // fetch a page of data from server
     this.allPokemon$ = this.pageNumberEnterPressed$.pipe(
       tap(() => {
         this.isLoading.set(true);
@@ -101,6 +105,8 @@ export class BulkComponent {
         return [];
       }),
     );
+
+    // client side filter and sort applied to page data
     this.filteredPokemon$ = this.allPokemon$.pipe(
       map((pokemonlist) =>
         pokemonlist.map((pokemon): SelectablePokemon => {
@@ -129,18 +135,21 @@ export class BulkComponent {
         return sorted;
       }),
     );
+
+    // finish data fetching
     this.filteredPokemon$.subscribe((items) => {
       this.pokemonCollection.set(items);
-      this.lastIndex.set(-1);
+      this.selectionService.clear();
       this.isLoading.set(false);
     });
 
+    // send selected items to caught database
     this.catchClicked$
       .pipe(
         filter((canCatch) => canCatch),
         map(() => this.selectedPokemon()),
         tap(() => {
-          this.deselectAll();
+          this.selectionService.clear();
         }),
         switchMap((pokemonList) => {
           const obs = pokemonList.map((pokemon) =>
@@ -158,7 +167,6 @@ export class BulkComponent {
       .subscribe((response) => {
         this.alertService.createSuccessAlert(`Caught ${response.name}`);
       });
-    this.pageCount$ = this.pokemonService.getPageCount();
   }
 
   onPageNumberEnter() {
@@ -172,30 +180,12 @@ export class BulkComponent {
     this.catchClicked$.next(true);
   }
 
-  onPokemonClicked({ index, event }: PokemonCardClickEvent) {
-    const { collection, nextLastIndexValue } = getNextSelectionState({
-      collection: this.pokemonCollection(),
-      lastIndex: {
-        value: this.lastIndex(),
-        get isUninitialized() {
-          return this.value < 0;
-        },
-      },
-      hasShiftKey: event.shiftKey,
-      hasCtrlKey: event.ctrlKey,
-      index,
-    });
-
-    this.pokemonCollection.set(collection);
-    this.lastIndex.set(nextLastIndexValue);
+  isSelected(index: number) {
+    return this.selectionService.isSelected(index);
   }
 
-  private deselectAll() {
-    this.pokemonCollection.update((item) => this.deselectedAll(item));
-  }
-
-  private deselectedAll(items: SelectablePokemon[]) {
-    return produceEach(items, (x) => (x.isSelected = false));
+  onPokemonClicked(data: PokemonCardClickEvent) {
+    this.selectionService.select(data);
   }
 
   toggleSortOrder() {
@@ -207,71 +197,3 @@ type PokemonCardClickEvent = {
   index: number;
   event: MouseEvent;
 };
-
-type GetNextSelectionStateArguments<T extends Selectable> = {
-  index: number;
-  lastIndex: LastIndex;
-  hasShiftKey: boolean;
-  hasCtrlKey: boolean;
-  collection: T[];
-};
-
-function getShiftClickSelectionState<T extends { isSelected: boolean }>({
-  collection,
-  lastIndex,
-  currentIndex,
-}: {
-  collection: T[];
-  lastIndex: number;
-  currentIndex: number;
-}) {
-  const [start, end] = sort([lastIndex, currentIndex], (x) => x);
-  return produceEach(collection, (item, index) => {
-    item.isSelected = index >= start && index <= end;
-  });
-}
-
-type LastIndex = {
-  value: number;
-  isUninitialized: boolean;
-};
-
-// eslint-disable-next-line max-lines-per-function
-function getNextSelectionState<T extends Selectable>({
-  collection,
-  hasCtrlKey,
-  hasShiftKey,
-  index,
-  lastIndex: { value: lastIndex, isUninitialized },
-}: GetNextSelectionStateArguments<T>) {
-  const getSingleLeftClickSelectionState = () => ({
-    collection: produceEach(collection, (item, index_) => (item.isSelected = index_ === index)),
-    nextLastIndexValue: index,
-  });
-
-  if (isUninitialized) {
-    return getSingleLeftClickSelectionState();
-  }
-  if (hasCtrlKey) {
-    return {
-      collection: produceEach(collection, (item, index_) => {
-        if (index_ === index) {
-          item.isSelected = true;
-        }
-      }),
-      nextLastIndexValue: index,
-    };
-  }
-  if (hasShiftKey) {
-    return {
-      collection: getShiftClickSelectionState({
-        collection,
-        lastIndex,
-        currentIndex: index,
-      }),
-      nextLastIndexValue: lastIndex,
-    };
-  }
-
-  return getSingleLeftClickSelectionState();
-}

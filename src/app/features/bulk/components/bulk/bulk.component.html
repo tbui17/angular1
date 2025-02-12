@@ -20,25 +20,13 @@
   } @else {
     <ul #pokemonCollectionElement i18n class="pokemon-collection__grid" title="Pokemon Cards">
       @for (pokemon of pokemonCollection(); track pokemon.id; let index = $index) {
-        @if (pokemon.isSelected) {
-          <app-pokemon-card
-            aria-selected="true"
+        <app-pokemon-card
             tabindex="0"
             [pokemon]="pokemon"
+            [ariaSelected]="isSelected(index)"
             [title]="pokemon.name"
             (click)="onPokemonClicked({index:index,event:$event})"
           />
-        } @else {
-          <li>
-            <app-pokemon-card
-              aria-selected="false"
-              tabindex="0"
-              [pokemon]="pokemon"
-              [title]="pokemon.name"
-              (click)="onPokemonClicked({index:index,event:$event})"
-            />
-          </li>
-        }
       }
     </ul>
     <div class="pagination-info">
