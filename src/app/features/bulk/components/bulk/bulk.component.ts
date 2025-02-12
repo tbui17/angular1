@@ -72,7 +72,6 @@ export class BulkComponent {
     'pokemonCollectionElement',
   );
   private readonly catchElement = viewChild.required<ElementRef<HTMLButtonElement>>('catch');
-  readonly isLoading = signal(false);
 
   private selectedPokemonImpl() {
     const collection = this.pokemonCollection();
@@ -99,9 +98,6 @@ export class BulkComponent {
 
     // fetch a page of data from server
     this.allPokemon$ = this.pageNumberEnterPressed$.pipe(
-      tap(() => {
-        this.isLoading.set(true);
-      }),
       switchMap((pageNumber) => this.pokemonService.getPokemonPage(pageNumber)),
       catchError((error) => {
         this.alertService.createErrorAlert(error);
@@ -144,7 +140,6 @@ export class BulkComponent {
     this.filteredPokemon$.subscribe((items) => {
       this.pokemonCollection.set(items);
       this.selectionService.clear();
-      this.isLoading.set(false);
     });
 
     // send selected items to caught database

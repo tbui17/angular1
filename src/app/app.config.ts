@@ -17,6 +17,8 @@ import { appRoutes } from './app.routes';
 import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
 import { authenticationInterceptor } from '~core/interceptors/authentication.interceptor';
 import { provideCloudinaryLoader } from '@angular/common';
+import { loadingInterceptor } from './core/interceptors/loading.interceptor';
+import { FullscreenOverlayContainer, OverlayContainer } from '@angular/cdk/overlay';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -47,9 +49,10 @@ export const appConfig: ApplicationConfig = {
     ),
     provideHttpClient(
       withFetch(),
-      withInterceptors([authenticationInterceptor, cachingInterceptor]),
+      withInterceptors([authenticationInterceptor, cachingInterceptor, loadingInterceptor]),
     ),
     provideAnimationsAsync(),
     provideCloudinaryLoader('https://res.cloudinary.com/ismaestro/'),
+    { provide: OverlayContainer, useClass: FullscreenOverlayContainer },
   ],
 };

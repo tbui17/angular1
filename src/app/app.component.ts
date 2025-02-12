@@ -13,6 +13,7 @@ import { CookiePopupComponent } from '~core/components/cookie-popup/cookie-popup
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 import '@shoelace-style/shoelace/dist/components/alert/alert.js';
+import { LoadingService } from './core/services/loading.service';
 
 @Component({
   selector: 'app-root',
@@ -33,6 +34,7 @@ export class AppComponent implements OnInit {
   private readonly titleService = inject(Title);
   private readonly headerService = inject(HeaderService);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly loadingService = inject(LoadingService);
 
   ngOnInit() {
     this.setMetaTags();
