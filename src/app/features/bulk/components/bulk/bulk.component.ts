@@ -114,6 +114,7 @@ export class BulkComponent {
           return result;
         }),
       ),
+      // triggered on filter, sort option, sort order change
       combineLatestWith(
         this.nameFilter$,
         this.selectedSortOption.valueChanges.pipe(startWith(this.selectedSortOption.value)),
