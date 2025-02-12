@@ -6,22 +6,19 @@ $empty-image-width: 200px;
 
 :host {
   @include pages.read-page;
-  
-  [aria-selected="true"] {
+
+  [aria-selected='true'] {
     background-color: var(--primitive-bright-blue);
   }
 
   text-align: center;
-  
 
   .pokemon-collection__grid {
-
     display: grid;
     grid-template-columns: 1fr;
     gap: var(--spacing-r-xl);
     border: thick solid var(--secondary-contrast);
     width: 120%;
-    
 
     @include mq.for-tablet-up {
       grid-template-columns: repeat($grid-columns, 1fr);
@@ -31,12 +28,18 @@ $empty-image-width: 200px;
   .pagination-info {
     display: flex;
     flex-flow: row;
-    width:30%;
+    width: 30%;
     justify-self: center;
-    gap:2rem;
+    gap: 2rem;
   }
 
   .pagination-info__page-input {
     width: 4rem;
+  }
+
+  .pokemon-collection__card {
+    -webkit-user-select: none; /* Safari */
+    -ms-user-select: none; /* IE 10 and IE 11 */
+    user-select: none; /* Standard syntax */
   }
 }

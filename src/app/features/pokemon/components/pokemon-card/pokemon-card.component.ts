@@ -17,6 +17,7 @@ import '@shoelace-style/shoelace/dist/components/skeleton/skeleton.js';
 export class PokemonCardComponent implements OnInit {
   readonly pokemon = input<Pokemon>();
   readonly loading = input<boolean>();
+  readonly imgDraggable = input<boolean>(true);
 
   pokemonImage: string | undefined;
 

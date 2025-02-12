@@ -194,5 +194,5 @@ export class BulkComponent {
 
 type PokemonCardClickEvent = {
   index: number;
-  event: MouseEvent;
+  event: MouseEvent | KeyboardEvent;
 };

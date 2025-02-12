@@ -19,10 +19,13 @@
     @for (pokemon of pokemonCollection(); track pokemon.id; let index = $index) {
       <app-pokemon-card
         tabindex="0"
+        class="pokemon-collection__card"
+        [imgDraggable]="false"
         [pokemon]="pokemon"
         [ariaSelected]="isSelected(index)"
         [title]="pokemon.name"
-        (click)="onPokemonClicked({index:index,event:$event})"
+        (click)="onPokemonClicked({index,event:$event})"
+        (keydown)="onPokemonClicked({index,event:$event})"
       />
     }
   </ul>

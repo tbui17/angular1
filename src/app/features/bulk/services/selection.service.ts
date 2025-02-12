@@ -12,16 +12,27 @@ export class SelectionService {
     return [...this._selected().values()];
   }
 
+  private isAcceptedKey(key: string | undefined) {
+    if (typeof key !== 'string') {
+      return true;
+    }
+    return ['Enter'].some((x) => x === key);
+  }
+
   select({
     index,
-    event: { ctrlKey, shiftKey },
+    event: { ctrlKey, shiftKey, key },
   }: {
     index: number;
     event: {
       shiftKey?: boolean;
       ctrlKey?: boolean;
+      key?: string;
     };
   }) {
+    if (!this.isAcceptedKey(key)) {
+      return;
+    }
     if (this.lastSelected() === null) {
       this.handleSingleSelect(index);
     }
