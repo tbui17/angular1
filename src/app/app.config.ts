@@ -50,6 +50,6 @@ export const appConfig: ApplicationConfig = {
       withInterceptors([authenticationInterceptor, cachingInterceptor]),
     ),
     provideAnimationsAsync(),
-    provideCloudinaryLoader('https://res.cloudinary.com/ismaestro/'), provideAnimationsAsync(),
+    provideCloudinaryLoader('https://res.cloudinary.com/ismaestro/'),
   ],
 };
