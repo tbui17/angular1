@@ -1,10 +1,7 @@
 import { computed, Injectable, signal } from '@angular/core';
 import { produce, enableMapSet } from 'immer';
-
-enableMapSet();
-
 @Injectable({
-  providedIn: 'root',
+  providedIn: 'any',
 })
 export class SelectionService {
   private readonly _selected = signal(new Set<number>());

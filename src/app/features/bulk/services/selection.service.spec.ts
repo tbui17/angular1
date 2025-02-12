@@ -3,6 +3,9 @@ import { TestBed } from '@angular/core/testing';
 import { SelectionService } from './selection.service';
 import { Injector, provideExperimentalZonelessChangeDetection } from '@angular/core';
 import { toObservable } from '@angular/core/rxjs-interop';
+import { enableMapSet } from 'immer';
+
+enableMapSet();
 
 describe('SelectionService', () => {
   let service: SelectionService;

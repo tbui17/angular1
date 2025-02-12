@@ -43,6 +43,7 @@ import { SelectionService } from '../../services/selection.service';
   styleUrl: './bulk.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
+  providers: [],
 })
 export class BulkComponent {
   private readonly pokemonService: PokemonService = inject(PokemonService);
