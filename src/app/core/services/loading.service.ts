@@ -29,7 +29,7 @@ export class LoadingService {
   }
 
   receiveResponse() {
-    this.requests.update((x) => x - 1);
+    this.requests.update((x) => Math.max(x - 1, 0));
   }
 
   private showLoader() {
