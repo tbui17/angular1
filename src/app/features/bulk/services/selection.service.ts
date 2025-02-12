@@ -71,6 +71,10 @@ export class SelectionService {
     return this._selected().has(index);
   }
 
+  isEmpty() {
+    return this._selected().size === 0;
+  }
+
   clear() {
     this._selected.set(new Set());
     this.lastSelected.set(null);

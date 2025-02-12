@@ -43,7 +43,7 @@ import { SelectionService } from '../../services/selection.service';
   styleUrl: './bulk.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
-  providers: [],
+  providers: [SelectionService],
 })
 export class BulkComponent {
   private readonly pokemonService: PokemonService = inject(PokemonService);
@@ -52,15 +52,17 @@ export class BulkComponent {
   private readonly selectionService = inject(SelectionService);
 
   private readonly allPokemon$;
+  readonly filteredPokemon$;
+  readonly selectedPokemon = computed(this.selectedPokemonImpl.bind(this));
 
   readonly pageNumber = new FormControl(1, { nonNullable: true });
   readonly pageNumberEnterPressed$ = new BehaviorSubject<number>(1);
-  readonly filteredPokemon$;
+
   readonly pokemonCollection = signal(new Array<SelectablePokemon>());
   readonly nameFilter = new FormControl('', { nonNullable: true });
   readonly nameFilter$ = this.nameFilter.valueChanges.pipe(startWith(''));
-  readonly selectedPokemon = computed(this.selectedPokemonImpl.bind(this));
-  readonly catchClicked$ = new Subject<boolean>();
+
+  readonly catchClicked$ = new Subject();
   readonly sortOptions = ['Order', 'Name', 'Height', 'Weight'];
   readonly selectedSortOption = new FormControl('Order', { nonNullable: true });
   readonly isSortedDescending = signal(true);
@@ -148,7 +150,6 @@ export class BulkComponent {
     // send selected items to caught database
     this.catchClicked$
       .pipe(
-        filter((canCatch) => canCatch),
         map(() => this.selectedPokemon()),
         tap(() => {
           this.selectionService.clear();
@@ -176,7 +177,8 @@ export class BulkComponent {
   }
 
   catchPokemon() {
-    if (this.selectedPokemon().length === 0) {
+    if (this.selectionService.isEmpty()) {
+      this.alertService.createErrorAlert('Please select a pokemon to catch.');
       return;
     }
     this.catchClicked$.next(true);

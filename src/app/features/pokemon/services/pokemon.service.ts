@@ -1,4 +1,4 @@
-import { inject, Injectable } from '@angular/core';
+import { inject, Injectable, signal } from '@angular/core';
 import type { Observable } from 'rxjs';
 import { forkJoin, map, switchMap } from 'rxjs';
 import { HttpClient, HttpContext, HttpParams } from '@angular/common/http';
@@ -7,13 +7,12 @@ import type { Pokemon } from '~features/pokemon/types/pokemon.type';
 
 const POKEMON_API_HOST = 'https://pokeapi.co/api/v2';
 
-const PAGE_COUNT = 20;
-
 @Injectable({
   providedIn: 'root',
 })
 export class PokemonService {
   private readonly httpClient = inject(HttpClient);
+  private readonly pageSize = signal(20);
 
   getPokemon(pokemonIdOrName: string | number): Observable<Pokemon> {
     let valueToLookFor = pokemonIdOrName;
@@ -39,7 +38,7 @@ export class PokemonService {
     const url = `${POKEMON_API_HOST}/pokemon`;
     return this.httpClient
       .get<{ results: { name: string }[]; count: number }>(url, {
-        params: new HttpParams().set('limit', PAGE_COUNT).set('offset', this.getOffset(page)),
+        params: new HttpParams().set('limit', this.pageSize()).set('offset', this.getOffset(page)),
         context: new HttpContext().set(CACHING_ENABLED, true),
       })
       .pipe(
@@ -57,10 +56,10 @@ export class PokemonService {
         params: new HttpParams().set('limit', 1),
         context: new HttpContext().set(CACHING_ENABLED, false),
       })
-      .pipe(map((response) => Math.ceil(response.count / PAGE_COUNT)));
+      .pipe(map((response) => Math.ceil(response.count / this.pageSize())));
   }
 
   private getOffset(page: number) {
-    return Math.max(0, page - 1) * PAGE_COUNT;
+    return Math.max(0, page - 1) * this.pageSize();
   }
 }
