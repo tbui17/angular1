@@ -17,10 +17,14 @@ describe('BulkComponent', () => {
 
   beforeEach(async () => {
     const stub = {
-      getPokemonPage: () => of(mockPokemonData),
+      getPokemonPage: (x) => {
+        const val = x === 1 ? mockPokemonData.slice(0, 2) : mockPokemonData.slice(2, 5);
+        return of(val);
+      },
       getPageCount: () => of(50),
-    };
-    spy = spyOn(stub, 'getPageCount').and.returnValue(of(50));
+    } satisfies Partial<PokemonService>;
+
+    spy = spyOn(stub, 'getPageCount');
 
     await TestBed.configureTestingModule({
       providers: [
@@ -47,7 +51,7 @@ describe('BulkComponent', () => {
 
   it('should render results', () => {
     const res = fixture.debugElement.queryAll(By.css('app-pokemon-card'));
-    expect(res.length).toBe(5);
+    expect(res.length).toBe(2);
   });
 
   it('should select', () => {
@@ -57,6 +61,14 @@ describe('BulkComponent', () => {
     });
     expect(component.selectedPokemon().length).toBe(1);
     expect(component.selectedPokemon()).toEqual([mockPokemonData[0]]);
+  });
+
+  it('should fetch different data on change', () => {
+    expect(component.pokemonCollection().length).toBe(2);
+    component.pageNumber.setValue(2);
+    expect(component.pokemonCollection().length).toBe(2);
+    component.onPageNumberEnter();
+    expect(component.pokemonCollection().length).toBe(3);
   });
 });
 
