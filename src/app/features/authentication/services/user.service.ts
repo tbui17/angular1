@@ -1,7 +1,7 @@
 import { inject, Injectable } from '@angular/core';
-import { HttpClient, HttpContext } from '@angular/common/http';
+import { HttpClient, HttpContext, HttpErrorResponse } from '@angular/common/http';
 import type { Observable } from 'rxjs';
-import { map } from 'rxjs';
+import { catchError, forkJoin, map, of, onErrorResumeNext, throwError } from 'rxjs';
 import { environment } from '~environments/environment';
 import { CACHING_ENABLED } from '~core/interceptors/caching.interceptor';
 import type { GetMeResponse } from '~features/authentication/types/get-me-response.type';
@@ -10,6 +10,7 @@ import type { UpdateUserRequest } from '~features/authentication/types/update-us
 import type { UpdateUserResponse } from '~features/authentication/types/update-user-response.type';
 import type { CatchPokemonRequest } from '~features/authentication/types/catch-pokemon-request.type';
 import type { CatchPokemonResponse } from '~features/authentication/types/catch-pokemon-response.type';
+import { Pokemon } from '../../pokemon/types/pokemon.type';
 
 @Injectable({
   providedIn: 'root',
@@ -54,5 +55,15 @@ export class UserService {
           return data.user;
         }),
       );
+  }
+
+  catchPokemons(pokemonList: Pokemon[]) {
+    const obs = pokemonList.map((pokemon) =>
+      this.catchPokemon({ pokemonId: pokemon.id }).pipe(
+        map(() => pokemon),
+        catchError((err) => of(err as Error)),
+      ),
+    );
+    return forkJoin(obs);
   }
 }

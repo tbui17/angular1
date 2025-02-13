@@ -17,7 +17,6 @@
   <button #catch type="button" i18n (click)="catchPokemon()">Catch!</button>
   <ul #pokemonCollectionElement i18n class="pokemon-collection__grid" title="Pokemon Cards">
     @for (pokemon of pokemonCollection(); track pokemon.id; let index = $index) {
-      
       <app-pokemon-card
         tabindex="0"
         class="pokemon-collection__card"

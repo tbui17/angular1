@@ -1,6 +1,7 @@
 import { HttpParams } from '@angular/common/http';
 import type { Draft } from 'immer';
 import { produce } from 'immer';
+import { catchError, of } from 'rxjs';
 
 export function produceEach<T>(items: T[], function_: (draft: Draft<T>, index: number) => void) {
   return produce(items, (array) => {

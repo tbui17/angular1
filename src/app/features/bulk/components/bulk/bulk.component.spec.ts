@@ -2,26 +2,32 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 
 import { BulkComponent } from './bulk.component';
 import { provideExperimentalZonelessChangeDetection } from '@angular/core';
-import { provideHttpClientTesting, HttpTestingController } from '@angular/common/http/testing';
+import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { provideHttpClient } from '@angular/common/http';
 import { PokemonService } from '../../../pokemon/services/pokemon.service';
-import { Observable, of } from 'rxjs';
+import { map, Observable, of, throwError } from 'rxjs';
 import { Pokemon } from '../../../pokemon/types/pokemon.type';
 import { By } from '@angular/platform-browser';
+import { UserService } from '../../../authentication/services/user.service';
+import { AlertService } from '../../../../core/services/alert.service';
 
 describe('BulkComponent', () => {
   let component: BulkComponent;
   let fixture: ComponentFixture<BulkComponent>;
 
   let spy: jasmine.Spy<() => Observable<number>>;
+  let userServiceSpy: jasmine.SpyObj<UserService>;
+  let alertServiceSpy: jasmine.SpyObj<AlertService>;
 
   beforeEach(async () => {
     const stub = {
-      getPokemonPage: (x) => {
+      getPokemonPage(x) {
         const val = x === 1 ? mockPokemonData.slice(0, 2) : mockPokemonData.slice(2, 5);
         return of(val);
       },
-      getPageCount: () => of(50),
+      getPageCount() {
+        return of(50);
+      },
     } satisfies Partial<PokemonService>;
 
     spy = spyOn(stub, 'getPageCount');
@@ -32,11 +38,22 @@ describe('BulkComponent', () => {
         provideHttpClient(),
         provideHttpClientTesting(),
         { provide: PokemonService, useValue: stub },
+        { provide: UserService, useValue: jasmine.createSpyObj('UserService', ['catchPokemons']) },
+        {
+          provide: AlertService,
+          useValue: jasmine.createSpyObj('AlertService', [
+            'createSuccessAlert',
+            'createErrorAlert',
+          ]),
+        },
       ],
       imports: [BulkComponent],
     }).compileComponents();
 
     fixture = TestBed.createComponent(BulkComponent);
+    userServiceSpy = TestBed.inject(UserService) as any;
+    alertServiceSpy = TestBed.inject(AlertService) as any;
+
     component = fixture.componentInstance;
     fixture.detectChanges();
   });
@@ -69,6 +86,44 @@ describe('BulkComponent', () => {
     expect(component.pokemonCollection().length).toBe(2);
     component.onPageNumberEnter();
     expect(component.pokemonCollection().length).toBe(3);
+  });
+
+  it('should catch', () => {
+    userServiceSpy.catchPokemons.and.returnValue(of(mockPokemonData));
+    component.onPokemonClicked({
+      index: 0,
+      event: new MouseEvent('click'),
+    });
+    component.catchPokemon();
+    expect(alertServiceSpy.createSuccessAlert).toHaveBeenCalledTimes(1);
+  });
+
+  it('should alert error', () => {
+    userServiceSpy.catchPokemons.and.returnValue(of([new Error('test')]));
+    component.onPokemonClicked({
+      index: 0,
+      event: new MouseEvent('click'),
+    });
+    component.catchPokemon();
+    expect(alertServiceSpy.createSuccessAlert).toHaveBeenCalledTimes(0);
+    expect(alertServiceSpy.createErrorAlert).toHaveBeenCalledTimes(1);
+  });
+
+  it('should alert successes and errors', () => {
+    userServiceSpy.catchPokemons.and.returnValue(of([new Error('test12345'), ...mockPokemonData]));
+    component.onPokemonClicked({
+      index: 0,
+      event: new MouseEvent('click'),
+    });
+    component.catchPokemon();
+    expect(alertServiceSpy.createSuccessAlert).toHaveBeenCalledTimes(1);
+    expect(alertServiceSpy.createErrorAlert).toHaveBeenCalledTimes(1);
+    const res = alertServiceSpy.createSuccessAlert.calls
+      .all()
+      .map((x) => x.args[0])
+      .filter((x) => !x.includes('test12345'))[0]
+      .toLowerCase();
+    mockPokemonData.map((x) => x.name.toLowerCase()).forEach((x) => expect(res).toContain(x));
   });
 });
 

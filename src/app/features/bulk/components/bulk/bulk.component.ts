@@ -1,4 +1,3 @@
-import { PokemonService } from '~features/pokemon/services/pokemon.service';
 import type { ElementRef } from '@angular/core';
 import {
   ChangeDetectionStrategy,
@@ -6,34 +5,20 @@ import {
   computed,
   CUSTOM_ELEMENTS_SCHEMA,
   inject,
-  signal,
   viewChild,
 } from '@angular/core';
 import { PokemonCardComponent } from '../../../pokemon/components/pokemon-card/pokemon-card.component';
 import { AlertService } from '../../../../core/services/alert.service';
-import { FormControl, ReactiveFormsModule } from '@angular/forms';
-import { sortBy } from 'remeda';
+import { ReactiveFormsModule } from '@angular/forms';
 
-import {
-  catchError,
-  combineLatestWith,
-  filter,
-  fromEvent,
-  map,
-  onErrorResumeNext,
-  startWith,
-  Subject,
-  switchMap,
-  tap,
-  throwError,
-} from 'rxjs';
+import { catchError, filter, fromEvent, map, of, Subject, switchMap, tap } from 'rxjs';
 
 import { UserService } from '../../../authentication/services/user.service';
-import type { HttpErrorResponse } from '@angular/common/http';
 import { AsyncPipe } from '@angular/common';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { SelectionService } from '../../services/selection.service';
 import { PokemonPageService } from '../../../pokemon/services/pokemon-page.service';
+import { partition } from 'remeda';
 
 @Component({
   selector: 'app-bulk',
@@ -54,22 +39,20 @@ export class BulkComponent {
     const collection = this.pokemonCollection();
     return this.selectionService.selected().map((index) => collection[index]);
   });
+  private readonly catchClicked$ = new Subject();
 
-  readonly pageNumber = this.pokemonService.pageInput;
-
-  readonly pokemonCollection = toSignal(this.pokemonService.data$, { initialValue: [] });
-  readonly nameFilter = this.pokemonService.nameFilter;
-
-  readonly catchClicked$ = new Subject();
-  readonly sortOptions = this.pokemonService.sortOptions;
-  readonly selectedSortOption = this.pokemonService.selectedSortOption;
-  readonly isSortedDescending = this.pokemonService.isSortedDescending;
-
-  readonly totalPages$ = this.pokemonService.totalPages$;
   private readonly pokemonCollectionElement = viewChild.required<ElementRef<HTMLDivElement>>(
     'pokemonCollectionElement',
   );
   private readonly catchElement = viewChild.required<ElementRef<HTMLButtonElement>>('catch');
+
+  readonly pokemonCollection = toSignal(this.pokemonService.data$, { initialValue: [] });
+  readonly pageNumber = this.pokemonService.pageInput;
+  readonly nameFilter = this.pokemonService.nameFilter;
+  readonly sortOptions = this.pokemonService.sortOptions;
+  readonly selectedSortOption = this.pokemonService.selectedSortOption;
+  readonly isSortedDescending = this.pokemonService.isSortedDescending;
+  readonly totalPages$ = this.pokemonService.totalPages$;
 
   // eslint-disable-next-line max-lines-per-function
   constructor() {
@@ -98,21 +81,18 @@ export class BulkComponent {
         tap(() => {
           this.selectionService.clear();
         }),
-        switchMap((pokemonList) => {
-          const obs = pokemonList.map((pokemon) =>
-            this.userService.catchPokemon({ pokemonId: pokemon.id }).pipe(
-              map(() => pokemon),
-              catchError((error: HttpErrorResponse) => {
-                this.alertService.createErrorAlert(error.message);
-                return throwError(() => error);
-              }),
-            ),
-          );
-          return onErrorResumeNext(...obs);
-        }),
+        switchMap(this.userService.catchPokemons.bind(this.userService)),
       )
-      .subscribe((response) => {
-        this.alertService.createSuccessAlert(`Caught ${response.name}`);
+      .subscribe((responses) => {
+        const [errors, successes] = partition(responses, (x): x is Error => x instanceof Error);
+        if (errors.length) {
+          const msg = errors.map((x) => x.message).join('\n');
+          this.alertService.createErrorAlert(msg);
+        }
+        if (successes.length) {
+          const msg = successes.map((x) => x.name).join('\n');
+          this.alertService.createSuccessAlert(msg);
+        }
       });
   }
 

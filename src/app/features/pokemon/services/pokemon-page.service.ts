@@ -8,8 +8,10 @@ import {
   combineLatestWith,
   map,
   Observable,
+  shareReplay,
   startWith,
   switchMap,
+  throwError,
 } from 'rxjs';
 import { AlertService } from '../../../core/services/alert.service';
 import { sortBy } from 'remeda';
@@ -36,7 +38,7 @@ export class PokemonPageService {
       switchMap((pageNumber) => this.pokemonService.getPokemonPage(pageNumber)),
       catchError((error) => {
         this.alertService.createErrorAlert(error);
-        return [];
+        return throwError(() => error);
       }),
       combineLatestWith(
         this.nameFilter.valueChanges.pipe(startWith('')),
