@@ -15,7 +15,6 @@ import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { sortBy } from 'remeda';
 
 import {
-  BehaviorSubject,
   catchError,
   combineLatestWith,
   filter,
@@ -35,6 +34,7 @@ import type { HttpErrorResponse } from '@angular/common/http';
 import { AsyncPipe } from '@angular/common';
 import { toObservable } from '@angular/core/rxjs-interop';
 import { SelectionService } from '../../services/selection.service';
+import { PokemonPageService } from '../../../pokemon/services/pokemon-page.service';
 
 @Component({
   selector: 'app-bulk',
@@ -46,42 +46,34 @@ import { SelectionService } from '../../services/selection.service';
   providers: [SelectionService],
 })
 export class BulkComponent {
-  private readonly pokemonService: PokemonService = inject(PokemonService);
   private readonly alertService = inject(AlertService);
   private readonly userService = inject(UserService);
   private readonly selectionService = inject(SelectionService);
+  private readonly pokemonService = inject(PokemonPageService);
 
-  private readonly allPokemon$;
-  readonly filteredPokemon$;
-  readonly selectedPokemon = computed(this.selectedPokemonImpl.bind(this));
+  readonly selectedPokemon = computed(() => {
+    const collection = this.pokemonCollection();
+    return this.selectionService.selected().map((index) => collection[index]);
+  });
 
-  readonly pageNumber = new FormControl(1, { nonNullable: true });
-  readonly pageNumberEnterPressed$ = new BehaviorSubject<number>(1);
+  readonly pageNumber = this.pokemonService.pageInput;
 
   readonly pokemonCollection = signal(new Array<Pokemon>());
-  readonly nameFilter = new FormControl('', { nonNullable: true });
-  readonly nameFilter$ = this.nameFilter.valueChanges.pipe(startWith(''));
+  readonly nameFilter = this.pokemonService.nameFilter;
 
   readonly catchClicked$ = new Subject();
   readonly sortOptions = ['Order', 'Name', 'Height', 'Weight'];
-  readonly selectedSortOption = new FormControl('Order', { nonNullable: true });
-  readonly isSortedDescending = signal(true);
+  readonly selectedSortOption = this.pokemonService.selectedSortOption;
+  readonly isSortedDescending = this.pokemonService.isSortedDescending;
 
-  readonly pageCount$;
+  readonly totalPages$ = this.pokemonService.totalPages$;
   private readonly pokemonCollectionElement = viewChild.required<ElementRef<HTMLDivElement>>(
     'pokemonCollectionElement',
   );
   private readonly catchElement = viewChild.required<ElementRef<HTMLButtonElement>>('catch');
 
-  private selectedPokemonImpl() {
-    const collection = this.pokemonCollection();
-    return this.selectionService.selected().map((index) => collection[index]);
-  }
-
   // eslint-disable-next-line max-lines-per-function
   constructor() {
-    this.pageCount$ = this.pokemonService.getPageCount();
-
     // reset selection after clicking outside
     fromEvent(window, 'click')
       .pipe(
@@ -96,45 +88,34 @@ export class BulkComponent {
         this.selectionService.clear();
       });
 
-    // fetch a page of data from server
-    this.allPokemon$ = this.pageNumberEnterPressed$.pipe(
-      switchMap((pageNumber) => this.pokemonService.getPokemonPage(pageNumber)),
-      catchError((error) => {
-        this.alertService.createErrorAlert(error);
-        return [];
-      }),
-    );
+    this.pokemonService.data$
+      .pipe(
+        // triggered on filter, sort option, sort order change
+        combineLatestWith(
+          this.nameFilter.valueChanges.pipe(startWith('')),
+          this.selectedSortOption.valueChanges.pipe(startWith(this.selectedSortOption.value)),
+          toObservable(this.isSortedDescending),
+        ),
+        map(([pokemonCollection, filterValue, sortValue, isSortedAscending]) => {
+          const lowerFilterValue = filterValue.toLowerCase();
+          const filtered = pokemonCollection.filter((pokemon) =>
+            pokemon.name.toLowerCase().includes(lowerFilterValue),
+          );
 
-    // client side filter and sort applied to page data
-    this.filteredPokemon$ = this.allPokemon$.pipe(
-      // triggered on filter, sort option, sort order change
-      combineLatestWith(
-        this.nameFilter$,
-        this.selectedSortOption.valueChanges.pipe(startWith(this.selectedSortOption.value)),
-        toObservable(this.isSortedDescending),
-      ),
-      map(([pokemonCollection, filterValue, sortValue, isSortedAscending]) => {
-        const lowerFilterValue = filterValue.toLowerCase();
-        const filtered = pokemonCollection.filter((pokemon) =>
-          pokemon.name.toLowerCase().includes(lowerFilterValue),
-        );
-
-        const sorted = sortBy(
-          filtered,
-          (pokemon) => pokemon[sortValue.toLowerCase() as keyof Pokemon],
-        );
-        if (!isSortedAscending) {
-          return sorted.reverse();
-        }
-        return sorted;
-      }),
-    );
-
-    // finish data fetching
-    this.filteredPokemon$.subscribe((items) => {
-      this.pokemonCollection.set(items);
-      this.selectionService.clear();
-    });
+          const sorted = sortBy(
+            filtered,
+            (pokemon) => pokemon[sortValue.toLowerCase() as keyof Pokemon],
+          );
+          if (!isSortedAscending) {
+            return sorted.reverse();
+          }
+          return sorted;
+        }),
+      )
+      .subscribe((items) => {
+        this.pokemonCollection.set(items);
+        this.selectionService.clear();
+      });
 
     // send selected items to caught database
     this.catchClicked$
@@ -162,7 +143,7 @@ export class BulkComponent {
   }
 
   onPageNumberEnter() {
-    this.pageNumberEnterPressed$.next(this.pageNumber.value);
+    this.pokemonService.fetchPage();
   }
 
   catchPokemon() {
