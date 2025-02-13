@@ -32,21 +32,21 @@ test.describe('Selection', () => {
     await expect(bulkPage.page.getByTitle('Bulbasaur')).toBeSelected();
     await bulkPage.page.getByTitle('Charmander').click();
     await expect(bulkPage.page.getByTitle('Charmander')).toBeSelected();
-    await expect(bulkPage.page.getByTitle('Bulbasaur')).not.toBeSelected();
+    await expect(bulkPage.page.getByTitle('Bulbasaur')).notToBeSelected();
   });
 
   test('should be able to select a range', async ({ bulkPage }) => {
     await bulkPage.selectRange('Ivysaur', 'Squirtle');
     await expect(bulkPage.page.getByTitle('Ivysaur')).toBeSelected();
     await expect(bulkPage.page.getByTitle('Squirtle')).toBeSelected();
-    await expect(bulkPage.page.getByTitle('Wartortle')).not.toBeSelected();
+    await expect(bulkPage.page.getByTitle('Wartortle')).notToBeSelected();
   });
 
   test('should clear selection on filter', async ({ bulkPage }) => {
     await bulkPage.page.getByTitle('Bulbasaur').click();
     await expect(bulkPage.page.getByTitle('Bulbasaur')).toBeSelected();
     await bulkPage.filter.fill('Bulbasaur');
-    await expect(bulkPage.page.getByTitle('Bulbasaur')).not.toBeSelected();
+    await expect(bulkPage.page.getByTitle('Bulbasaur')).notToBeSelected();
   });
 });
 
@@ -57,7 +57,7 @@ test.describe('Sorting', () => {
     const names = await Promise.all(
       cards.slice(0, 3).map(async (element) => element.getByLabel('Name').textContent()),
     );
-    const lowerNames = names.map((name) => name?.toLowerCase());
+    const lowerNames = names.map((name) => name?.toLocaleLowerCase());
     expect(lowerNames).toStrictEqual(['weedle', 'wartortle', 'venusaur']);
   });
 });

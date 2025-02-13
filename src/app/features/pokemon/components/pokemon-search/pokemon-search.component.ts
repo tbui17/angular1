@@ -41,7 +41,7 @@ export class PokemonSearchComponent {
   pokemonLoading = false;
 
   searchPokemon() {
-    const pokemonName = this.termValue.trim().toLowerCase();
+    const pokemonName = this.termValue.trim().toLocaleLowerCase();
     if (pokemonName) {
       this.pokemonLoading = true;
 

@@ -28,11 +28,10 @@ import {
   throwError,
 } from 'rxjs';
 
-import type { Pokemon } from '../../../pokemon/types/pokemon.type';
 import { UserService } from '../../../authentication/services/user.service';
 import type { HttpErrorResponse } from '@angular/common/http';
 import { AsyncPipe } from '@angular/common';
-import { toObservable } from '@angular/core/rxjs-interop';
+import { toSignal } from '@angular/core/rxjs-interop';
 import { SelectionService } from '../../services/selection.service';
 import { PokemonPageService } from '../../../pokemon/services/pokemon-page.service';
 
@@ -58,11 +57,11 @@ export class BulkComponent {
 
   readonly pageNumber = this.pokemonService.pageInput;
 
-  readonly pokemonCollection = signal(new Array<Pokemon>());
+  readonly pokemonCollection = toSignal(this.pokemonService.data$, { initialValue: [] });
   readonly nameFilter = this.pokemonService.nameFilter;
 
   readonly catchClicked$ = new Subject();
-  readonly sortOptions = ['Order', 'Name', 'Height', 'Weight'];
+  readonly sortOptions = this.pokemonService.sortOptions;
   readonly selectedSortOption = this.pokemonService.selectedSortOption;
   readonly isSortedDescending = this.pokemonService.isSortedDescending;
 
@@ -88,34 +87,9 @@ export class BulkComponent {
         this.selectionService.clear();
       });
 
-    this.pokemonService.data$
-      .pipe(
-        // triggered on filter, sort option, sort order change
-        combineLatestWith(
-          this.nameFilter.valueChanges.pipe(startWith('')),
-          this.selectedSortOption.valueChanges.pipe(startWith(this.selectedSortOption.value)),
-          toObservable(this.isSortedDescending),
-        ),
-        map(([pokemonCollection, filterValue, sortValue, isSortedAscending]) => {
-          const lowerFilterValue = filterValue.toLowerCase();
-          const filtered = pokemonCollection.filter((pokemon) =>
-            pokemon.name.toLowerCase().includes(lowerFilterValue),
-          );
-
-          const sorted = sortBy(
-            filtered,
-            (pokemon) => pokemon[sortValue.toLowerCase() as keyof Pokemon],
-          );
-          if (!isSortedAscending) {
-            return sorted.reverse();
-          }
-          return sorted;
-        }),
-      )
-      .subscribe((items) => {
-        this.pokemonCollection.set(items);
-        this.selectionService.clear();
-      });
+    this.pokemonService.data$.subscribe(() => {
+      this.selectionService.clear();
+    });
 
     // send selected items to caught database
     this.catchClicked$

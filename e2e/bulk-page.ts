@@ -20,19 +20,9 @@ export class BulkPage {
   }
 
   async sortByNameDescending() {
-    await this.page.getByLabel('Sort By').selectOption('Name');
+    await this.page.getByLabel('Sort By').selectOption({ value: 'name' });
 
     await this.page.getByRole('button', { name: 'Sort Order' }).click();
-  }
-
-  static async auth(page: Page) {
-    await page.goto('http://localhost:4200');
-    await page.getByText('Log In').click();
-    await page.getByLabel('Email').fill('admin@domain.com');
-    await page.getByLabel('Password').and(page.getByRole('textbox')).fill('Admin1234');
-    await page.getByRole('button', { name: 'Enter' }).click();
-    await page.getByRole('link', { name: 'Bulk' }).click();
-    return new BulkPage(page);
   }
 
   async goto() {

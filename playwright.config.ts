@@ -6,20 +6,22 @@ const config: PlaywrightTestConfig = {
   expect: {
     timeout: 5000,
   },
-  fullyParallel: false,
+  fullyParallel: true,
   forbidOnly: true,
   retries: 0,
-  workers: 1,
   use: {
     actionTimeout: 0,
     trace: 'on-first-retry',
   },
   projects: [
+    { name: 'setup', testMatch: /.*\.setup\.ts/ },
     {
       name: 'Google Chrome',
       use: {
         channel: 'chrome',
+        storageState: 'playwright/.auth/user.json',
       },
+      dependencies: ['setup'],
     },
     // {
     //   name: 'Safari',

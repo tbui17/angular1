@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/restrict-template-expressions */
 /* eslint-disable @typescript-eslint/no-base-to-string */
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import type { Locator } from '@playwright/test';
+import type { Locator, Page } from '@playwright/test';
 import { test as base, expect as baseExpect } from '@playwright/test';
 import { BulkPage } from './bulk-page';
 
@@ -15,7 +15,8 @@ export const test = base.extend<TestFixtures>({
   bulkPage: async ({ page }, use) => {
     // Set up the fixture.
     page.setDefaultTimeout(5000);
-    const bulkPage = await BulkPage.auth(page);
+    const bulkPage = new BulkPage(page);
+    await bulkPage.goto();
     await expect(bulkPage.pokemonCards.first()).toBeVisible();
 
     // Use the fixture value in the test.
@@ -25,36 +26,46 @@ export const test = base.extend<TestFixtures>({
 export const expect = baseExpect.extend({
   // eslint-disable-next-line max-lines-per-function
   async toBeSelected(locator: Locator, options?: { timeout?: number }) {
-    const assertionName = 'toBeSelected';
-    let pass: boolean;
-    let matcherResult: any;
+    // playwright will retry until timeout if used with .not, causes long tests
     try {
-      await expect(locator).toHaveAttribute('aria-selected', 'true', options);
-      pass = true;
-    } catch (error: any) {
-      // eslint-disable-next-line @typescript-eslint/prefer-destructuring
-      matcherResult = error.matcherResult;
-      pass = false;
+      await expect(locator).toHaveAttribute('aria-selected', 'true');
+      return {
+        message: () => 'Passed',
+        timeout: options?.timeout,
+        pass: true,
+      };
+    } catch (e: any) {
+      return {
+        message: () => (e as Error).message,
+        timeout: options?.timeout,
+        pass: false,
+      };
     }
-    const message = pass
-      ? () =>
-          `${this.utils.matcherHint(assertionName, undefined, undefined, { isNot: this.isNot }) 
-          }\n\n` +
-          `Locator: ${locator}\n` +
-          `Expected: not ${this.utils.printExpected(true)}\n${ 
-          matcherResult ? `Received: ${this.utils.printReceived(matcherResult.actual)}` : ''}`
-      : () =>
-          `${this.utils.matcherHint(assertionName, undefined, undefined, { isNot: this.isNot }) 
-          }\n\n` +
-          `Locator: ${locator}\n` +
-          `Expected: ${this.utils.printExpected(true)}\n${ 
-          matcherResult ? `Received: ${this.utils.printReceived(matcherResult.actual)}` : ''}`;
-    return {
-      message,
-      pass,
-      name: assertionName,
-      expected: true,
-      actual: matcherResult?.actual,
-    };
+  },
+
+  async notToBeSelected(locator: Locator, options?: { timeout?: number }) {
+    try {
+      await expect(locator).not.toHaveAttribute('aria-selected', 'true');
+      return {
+        message: () => 'Passed',
+        timeout: options?.timeout,
+        pass: true,
+      };
+    } catch (e: any) {
+      return {
+        message: () => (e as Error).message,
+        timeout: options?.timeout,
+        pass: false,
+      };
+    }
   },
 });
+
+export async function auth(page: Page) {
+  await page.goto('http://localhost:4200');
+  await page.getByText('Log In').click();
+  await page.getByLabel('Email').fill('admin@domain.com');
+  await page.getByLabel('Password').and(page.getByRole('textbox')).fill('Admin1234');
+  await page.getByRole('button', { name: 'Enter' }).click();
+  await page.waitForLoadState('networkidle');
+}

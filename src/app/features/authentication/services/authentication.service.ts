@@ -38,7 +38,7 @@ export class AuthenticationService {
       .post<RegisterResponse>(
         registerEndpoint,
         {
-          email: registerRequest.email.trim().toLowerCase(),
+          email: registerRequest.email.trim().toLocaleLowerCase(),
           password: registerRequest.password,
           name: registerRequest.name,
           favouritePokemonId: registerRequest.favouritePokemonId,
@@ -64,7 +64,7 @@ export class AuthenticationService {
     const loginEndpoint = `${this.apiUrl}/v1/authentication/login`;
     return this.httpClient
       .post<LoginResponse>(loginEndpoint, {
-        email: loginRequest.email.trim().toLowerCase(),
+        email: loginRequest.email.trim().toLocaleLowerCase(),
         password: loginRequest.password,
       })
       .pipe(
