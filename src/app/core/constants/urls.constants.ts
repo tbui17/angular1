@@ -14,4 +14,5 @@ export const AUTH_URLS = {
 
 export const POKEMON_URLS = {
   detail: (id: string) => `/${POKEMON_PATHS.base}/${id}`,
+  POKEMON_API_HOST: 'https://pokeapi.co/api/v2',
 };

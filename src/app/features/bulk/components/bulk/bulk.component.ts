@@ -29,7 +29,7 @@ import {
   throwError,
 } from 'rxjs';
 
-import type { SelectablePokemon } from '../../../pokemon/types/pokemon.type';
+import type { Pokemon } from '../../../pokemon/types/pokemon.type';
 import { UserService } from '../../../authentication/services/user.service';
 import type { HttpErrorResponse } from '@angular/common/http';
 import { AsyncPipe } from '@angular/common';
@@ -58,7 +58,7 @@ export class BulkComponent {
   readonly pageNumber = new FormControl(1, { nonNullable: true });
   readonly pageNumberEnterPressed$ = new BehaviorSubject<number>(1);
 
-  readonly pokemonCollection = signal(new Array<SelectablePokemon>());
+  readonly pokemonCollection = signal(new Array<Pokemon>());
   readonly nameFilter = new FormControl('', { nonNullable: true });
   readonly nameFilter$ = this.nameFilter.valueChanges.pipe(startWith(''));
 
@@ -107,12 +107,6 @@ export class BulkComponent {
 
     // client side filter and sort applied to page data
     this.filteredPokemon$ = this.allPokemon$.pipe(
-      map((pokemonlist) =>
-        pokemonlist.map((pokemon): SelectablePokemon => {
-          const result: SelectablePokemon = { ...pokemon, isSelected: false };
-          return result;
-        }),
-      ),
       // triggered on filter, sort option, sort order change
       combineLatestWith(
         this.nameFilter$,
@@ -127,7 +121,7 @@ export class BulkComponent {
 
         const sorted = sortBy(
           filtered,
-          (pokemon) => pokemon[sortValue.toLowerCase() as keyof SelectablePokemon],
+          (pokemon) => pokemon[sortValue.toLowerCase() as keyof Pokemon],
         );
         if (!isSortedAscending) {
           return sorted.reverse();

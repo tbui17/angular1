@@ -4,8 +4,9 @@ import { forkJoin, map, switchMap } from 'rxjs';
 import { HttpClient, HttpContext, HttpParams } from '@angular/common/http';
 import { CACHING_ENABLED } from '~core/interceptors/caching.interceptor';
 import type { Pokemon } from '~features/pokemon/types/pokemon.type';
+import { POKEMON_URLS } from '../../../core/constants/urls.constants';
 
-const POKEMON_API_HOST = 'https://pokeapi.co/api/v2';
+const { POKEMON_API_HOST } = POKEMON_URLS;
 
 @Injectable({
   providedIn: 'root',
