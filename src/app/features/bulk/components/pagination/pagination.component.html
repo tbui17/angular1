@@ -1,0 +1,19 @@
+<!-- eslint-disable @angular-eslint/template/no-call-expression -->
+<div class="pagination-info">
+  <button title="Previous" type="button" [disabled]="previousDisabled()" (click)="previous.emit($event)">
+    <fa-icon [icon]="faArrowLeft" />
+  </button>
+  <input
+    class="pagination-info__page-input"
+    title="Current Page"
+    type="number"
+    min="1"
+    [max]="totalPages()"
+    [formControl]="control()"
+    (keyup.enter)="onEnter.emit($event)"
+  />
+  <span class="pagination-info__total-page" i18n>of {{totalPages()}} pages</span>
+  <button title="Next" type="button" [disabled]="nextDisabled()" (click)="next.emit($event)">
+    <fa-icon [icon]="faArrowRight" />
+  </button>
+</div>

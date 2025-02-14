@@ -1,4 +1,4 @@
-import type { ElementRef } from '@angular/core';
+import type { ElementRef, OnInit } from '@angular/core';
 import {
   ChangeDetectionStrategy,
   Component,
@@ -11,7 +11,7 @@ import { PokemonCardComponent } from '../../../pokemon/components/pokemon-card/p
 import { AlertService } from '../../../../core/services/alert.service';
 import { ReactiveFormsModule } from '@angular/forms';
 
-import { catchError, filter, fromEvent, map, of, Subject, switchMap, tap } from 'rxjs';
+import { filter, fromEvent, map, Subject, switchMap, tap, withLatestFrom } from 'rxjs';
 
 import { UserService } from '../../../authentication/services/user.service';
 import { AsyncPipe } from '@angular/common';
@@ -19,17 +19,26 @@ import { toSignal } from '@angular/core/rxjs-interop';
 import { SelectionService } from '../../services/selection.service';
 import { PokemonPageService } from '../../../pokemon/services/pokemon-page.service';
 import { partition } from 'remeda';
+import { faArrowUp, faArrowDown } from '@fortawesome/free-solid-svg-icons';
+import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
+import { PaginationComponent } from '../pagination/pagination.component';
 
 @Component({
   selector: 'app-bulk',
-  imports: [PokemonCardComponent, ReactiveFormsModule, AsyncPipe],
+  imports: [
+    PokemonCardComponent,
+    ReactiveFormsModule,
+    AsyncPipe,
+    FontAwesomeModule,
+    PaginationComponent,
+  ],
   templateUrl: './bulk.component.html',
   styleUrl: './bulk.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
   providers: [SelectionService],
 })
-export class BulkComponent {
+export class BulkComponent implements OnInit {
   private readonly alertService = inject(AlertService);
   private readonly userService = inject(UserService);
   private readonly selectionService = inject(SelectionService);
@@ -53,9 +62,14 @@ export class BulkComponent {
   readonly selectedSortOption = this.pokemonService.selectedSortOption;
   readonly isSortedDescending = this.pokemonService.isSortedDescending;
   readonly totalPages$ = this.pokemonService.totalPages$;
+  readonly previousDisabled$ = this.pokemonService.canGetPrevious$.pipe(map((x) => !x));
+  readonly nextDisabled$ = this.pokemonService.canGetNext$.pipe(map((x) => !x));
 
-  // eslint-disable-next-line max-lines-per-function
-  constructor() {
+  readonly sortDirectionArrow = computed(() =>
+    this.isSortedDescending() ? faArrowUp : faArrowDown,
+  );
+
+  ngOnInit(): void {
     // reset selection after clicking outside
     fromEvent(window, 'click')
       .pipe(
@@ -86,12 +100,12 @@ export class BulkComponent {
       .subscribe((responses) => {
         const [errors, successes] = partition(responses, (x): x is Error => x instanceof Error);
         if (errors.length) {
-          const msg = errors.map((x) => x.message).join('\n');
+          const msg = errors.map((x) => x.message).join(',');
           this.alertService.createErrorAlert(msg);
         }
         if (successes.length) {
-          const msg = successes.map((x) => x.name).join('\n');
-          this.alertService.createSuccessAlert(msg);
+          const msg = successes.map((x) => x.name).join(',');
+          this.alertService.createSuccessAlert(`Caught: ${msg}`);
         }
       });
   }
@@ -118,6 +132,14 @@ export class BulkComponent {
 
   toggleSortOrder() {
     this.isSortedDescending.update((value) => !value);
+  }
+
+  next() {
+    this.pokemonService.next();
+  }
+
+  previous() {
+    this.pokemonService.previous();
   }
 }
 

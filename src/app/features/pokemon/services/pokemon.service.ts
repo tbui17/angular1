@@ -1,6 +1,6 @@
 import { inject, Injectable, signal } from '@angular/core';
 import type { Observable } from 'rxjs';
-import { forkJoin, map, switchMap } from 'rxjs';
+import { forkJoin, map, shareReplay, switchMap } from 'rxjs';
 import { HttpClient, HttpContext, HttpParams } from '@angular/common/http';
 import { CACHING_ENABLED } from '~core/interceptors/caching.interceptor';
 import type { Pokemon } from '~features/pokemon/types/pokemon.type';
@@ -57,7 +57,10 @@ export class PokemonService {
         params: new HttpParams().set('limit', 1),
         context: new HttpContext().set(CACHING_ENABLED, false),
       })
-      .pipe(map((response) => Math.ceil(response.count / this.pageSize())));
+      .pipe(
+        map((response) => Math.ceil(response.count / this.pageSize())),
+        shareReplay(1),
+      );
   }
 
   private getOffset(page: number) {

@@ -61,7 +61,7 @@ export class UserService {
     const obs = pokemonList.map((pokemon) =>
       this.catchPokemon({ pokemonId: pokemon.id }).pipe(
         map(() => pokemon),
-        catchError((err) => of(err as Error)),
+        catchError((err) => of(new Error(err.message, { cause: err }))),
       ),
     );
     return forkJoin(obs);

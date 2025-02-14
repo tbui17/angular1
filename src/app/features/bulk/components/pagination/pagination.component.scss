@@ -1,0 +1,28 @@
+:host {
+  .pagination-info {
+    display: flex;
+    flex-flow: row;
+    width: 30%;
+    justify-self: center;
+    justify-items: center;
+    align-items: center;
+  }
+
+  .pagination-info__page-input {
+    width: 3rem;
+    text-align: center;
+    height: 1.62rem;
+  }
+
+  fa-icon {
+    color: rgb(74, 144, 227);
+  }
+
+  .pagination-info__total-page {
+    margin-inline: 0.5rem;
+  }
+
+  button:has(fa-icon) {
+    height: 2rem;
+  }
+}
