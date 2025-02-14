@@ -1,3 +1,12 @@
+@keyframes fadeIn {
+  from {
+    opacity: 0.5;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
 :host {
   .card__container {
     display: flex;
@@ -8,16 +17,25 @@
     color: var(--primary-contrast);
     border: 1px solid var(--senary-contrast);
     border-radius: var(--border-radius-sm);
+    animation: fadeIn 0.3s ease-in forwards;
     transition:
       border-color 0.3s ease,
-      background-color 0.3s ease;
+      background 0.3s ease,
+      transform 0.3s ease;
 
     &:hover {
       .card__link {
         background-position: 0 0;
       }
-
       background: var(--card-background-hover);
+      transform: scale(1.1);
+    }
+
+    &[aria-selected='true'] {
+      background: var(--card-background-selected);
+      &:hover {
+        background: var(--card-background-selected-hover);
+      }
     }
 
     * + *:not(a, code, span),

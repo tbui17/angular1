@@ -1,6 +1,6 @@
 <!-- eslint-disable @angular-eslint/template/no-call-expression -->
 @if (!loading()) {
-  <app-card>
+  <app-card [selected]="selected()">
     <ng-container i18n ngProjectAs="heading">
       <h2 aria-label="Name" class="card__heading">{{ pokemon()?.name | firstTitleCase }}</h2>
     </ng-container>

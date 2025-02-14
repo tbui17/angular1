@@ -10,4 +10,5 @@ import { NgTemplateOutlet } from '@angular/common';
 })
 export class CardComponent {
   readonly href = input<string>('');
+  readonly selected = input(false);
 }

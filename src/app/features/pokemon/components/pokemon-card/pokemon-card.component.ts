@@ -18,6 +18,7 @@ export class PokemonCardComponent implements OnInit {
   readonly pokemon = input<Pokemon>();
   readonly loading = input<boolean>();
   readonly imgDraggable = input<boolean>(true);
+  readonly selected = input<boolean>(false);
 
   pokemonImage: string | undefined;
 

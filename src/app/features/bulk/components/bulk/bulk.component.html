@@ -31,6 +31,7 @@
         [imgDraggable]="false"
         [pokemon]="pokemon"
         [ariaSelected]="isSelected(index)"
+        [selected]="isSelected(index)"
         [title]="pokemon.name"
         (click)="onPokemonClicked({index,event:$event})"
         (keydown)="onPokemonClicked({index,event:$event})"

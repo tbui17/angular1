@@ -97,6 +97,8 @@
   --card-link-background-hover: var(
     --pink-to-highlight-to-purple-to-blue-horizontal-mixed-gradient
   );
+  --card-background-selected-hover: color-mix(in oklab, #0546FF 38%, #ffffffe5 48.1%);
+  --card-background-selected: var(--primitive-bright-blue);
 }
 
 @mixin light-definitions() {

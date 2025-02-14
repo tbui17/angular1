@@ -1,10 +1,10 @@
 <!-- eslint-disable @angular-eslint/template/no-call-expression -->
 @if (href()) {
-  <a class="card__container" target="_blank" [href]="href()">
+  <a class="card__container" target="_blank" [ariaSelected]="selected()" [href]="href()">
     <ng-container [ngTemplateOutlet]="cardContent" />
   </a>
 } @else {
-  <div class="card__container">
+  <div class="card__container" [ariaSelected]="selected()">
     <ng-container [ngTemplateOutlet]="cardContent" />
   </div>
 }

@@ -7,10 +7,6 @@ $empty-image-width: 200px;
 :host {
   @include pages.read-page;
 
-  [aria-selected='true'] {
-    background-color: var(--primitive-bright-blue);
-  }
-
   text-align: center;
 
   .pokemon-collection__grid {
