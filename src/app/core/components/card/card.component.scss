@@ -29,12 +29,14 @@
       }
       background: var(--card-background-hover);
       transform: scale(1.1);
+      box-shadow: 2px 2px var(--senary-contrast);
     }
 
     &[aria-selected='true'] {
       background: var(--card-background-selected);
       &:hover {
         background: var(--card-background-selected-hover);
+        box-shadow: 2px 2px var(--senary-contrast);
       }
     }
 

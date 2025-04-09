@@ -141,6 +141,10 @@ export class BulkComponent implements OnInit {
   previous() {
     this.pokemonService.previous();
   }
+
+  onCardBlur() {
+    this.pokemonService.resetInput();
+  }
 }
 
 type PokemonCardClickEvent = {

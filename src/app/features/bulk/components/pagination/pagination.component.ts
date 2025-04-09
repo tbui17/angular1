@@ -15,10 +15,11 @@ export class PaginationComponent {
   control = input(new FormControl<number>(1, { nonNullable: true }));
   totalPages = input(1);
   onEnter = output<Event>();
-  faArrowLeft = faArrowLeft
-  faArrowRight = faArrowRight
-  previous = output<MouseEvent>()
-  previousDisabled = input(false)
-  next = output<MouseEvent>()
-  nextDisabled = input(false)
+  faArrowLeft = faArrowLeft;
+  faArrowRight = faArrowRight;
+  previous = output<MouseEvent>();
+  previousDisabled = input(false);
+  next = output<MouseEvent>();
+  nextDisabled = input(false);
+  inputBlur = output<Event>();
 }

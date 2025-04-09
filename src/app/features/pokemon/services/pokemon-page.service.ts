@@ -1,12 +1,11 @@
 import { PokemonService } from '~features/pokemon/services/pokemon.service';
-import { inject, Injectable, OnInit, signal } from '@angular/core';
+import { inject, Injectable, signal } from '@angular/core';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
-import { FormControl, Validators } from '@angular/forms';
+import { FormControl } from '@angular/forms';
 import {
   BehaviorSubject,
   catchError,
   combineLatestWith,
-  filter,
   map,
   Observable,
   startWith,
@@ -24,36 +23,31 @@ import { Pokemon } from '../types/pokemon.type';
 export class PokemonPageService {
   private readonly pokemonService = inject(PokemonService);
   private readonly alertService = inject(AlertService);
-  readonly totalPages$;
-  private readonly totalPages;
-  readonly pageInput;
+  readonly totalPages$ = this.pokemonService.getPageCount();
+  private readonly totalPages = toSignal(this.totalPages$, { initialValue: 1 });
+  readonly pageInput = new FormControl<number>(1, {
+    nonNullable: true,
+    validators: [(x) => (isNaN(Number.parseInt(x.value)) ? { invalidNumber: x.value } : null)],
+  });
   private page$ = new BehaviorSubject(1);
-  private page = toSignal(this.page$, { initialValue: 1 });
+  private page = toSignal(this.page$, { requireSync: true });
   readonly nameFilter = new FormControl('', { nonNullable: true });
   readonly sortOptions: Array<keyof Pokemon> = ['order', 'name', 'height', 'weight'];
   readonly selectedSortOption = new FormControl<keyof Pokemon>('order', { nonNullable: true });
 
   readonly isSortedDescending = signal(true);
   readonly data$: Observable<Pokemon[]>;
-  readonly canGetPrevious$;
-
-  readonly canGetNext$;
+  readonly canGetPrevious$ = this.page$.pipe(map((x) => x > 1));
+  readonly canGetNext$ = this.page$.pipe(
+    withLatestFrom(this.totalPages$),
+    map(([currentPage, totalPages]) => currentPage < totalPages && currentPage >= 1),
+  );
 
   constructor() {
-    this.totalPages$ = this.pokemonService.getPageCount();
-    this.totalPages = toSignal(this.totalPages$, { initialValue: 1 });
-    this.pageInput = new FormControl<number>(1, {
-      nonNullable: true,
-      validators: [(x) => (isNaN(Number.parseInt(x.value)) ? { invalidNumber: x.value } : null)],
-    });
-    this.canGetPrevious$ = this.page$.pipe(map((x) => x > 1));
-    this.canGetNext$ = this.page$.pipe(
-      withLatestFrom(this.totalPages$),
-      map(([currentPage, totalPages]) => currentPage < totalPages && currentPage >= 1),
-    );
-
     this.data$ = this.page$.pipe(
-      switchMap((pageNumber) => this.pokemonService.getPokemonPage(pageNumber)),
+      switchMap((pageNumber) => {
+        return this.pokemonService.getPokemonPage(pageNumber);
+      }),
       catchError((error) => {
         this.alertService.createErrorAlert(error);
         return throwError(() => error);
@@ -94,5 +88,9 @@ export class PokemonPageService {
 
   previous() {
     this.page$.next(Math.max(this.page() - 1, 1));
+  }
+
+  resetInput() {
+    this.pageInput.setValue(this.page());
   }
 }

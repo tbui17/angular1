@@ -11,6 +11,7 @@
     [max]="totalPages()"
     [formControl]="control()"
     (keyup.enter)="onEnter.emit($event)"
+    (blur)="inputBlur.emit($event)"
   />
   <span class="pagination-info__total-page" i18n>of {{totalPages()}} pages</span>
   <button title="Next" type="button" [disabled]="nextDisabled()" (click)="next.emit($event)">

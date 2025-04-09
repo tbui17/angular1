@@ -1,7 +1,7 @@
 import { inject, Injectable, signal } from '@angular/core';
 import type { Observable } from 'rxjs';
 import { forkJoin, map, shareReplay, switchMap } from 'rxjs';
-import { HttpClient, HttpContext, HttpParams } from '@angular/common/http';
+import { HttpClient, HttpContext, HttpHeaders, HttpParams } from '@angular/common/http';
 import { CACHING_ENABLED } from '~core/interceptors/caching.interceptor';
 import type { Pokemon } from '~features/pokemon/types/pokemon.type';
 import { POKEMON_URLS } from '../../../core/constants/urls.constants';
@@ -23,6 +23,7 @@ export class PokemonService {
     return this.httpClient.get<Pokemon>(`${POKEMON_API_HOST}/pokemon/${valueToLookFor}`, {
       params: new HttpParams().set('limit', '1'),
       context: new HttpContext().set(CACHING_ENABLED, true),
+      headers: new HttpHeaders().set('cache-control', 'private'),
     });
   }
 
@@ -41,6 +42,7 @@ export class PokemonService {
       .get<{ results: { name: string }[]; count: number }>(url, {
         params: new HttpParams().set('limit', this.pageSize()).set('offset', this.getOffset(page)),
         context: new HttpContext().set(CACHING_ENABLED, true),
+        headers: new HttpHeaders().set('cache-control', 'private'),
       })
       .pipe(
         switchMap((response) => {
@@ -55,7 +57,8 @@ export class PokemonService {
     return this.httpClient
       .get<{ results: { name: string }[]; count: number }>(url, {
         params: new HttpParams().set('limit', 1),
-        context: new HttpContext().set(CACHING_ENABLED, false),
+        context: new HttpContext().set(CACHING_ENABLED, true),
+        headers: new HttpHeaders().set('cache-control', 'private'),
       })
       .pipe(
         map((response) => Math.ceil(response.count / this.pageSize())),
